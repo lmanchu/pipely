@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# clasp credentials (do not commit)
+.clasprc.json
+
+# OS files
+.DS_Store
+
+# npm
+package-lock.json
+
+# Local config with secrets
+# .clasp.json contains scriptId which is ok to commit

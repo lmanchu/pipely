@@ -1,0 +1,12 @@
+{
+  "name": "pipely",
+  "version": "1.0.0",
+  "description": "Pipely is a lightweight CRM that runs directly inside Gmail. It allows you to manage deals, contacts, and pipelines without leaving your inbox.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

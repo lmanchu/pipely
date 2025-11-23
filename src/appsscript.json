@@ -1,0 +1,29 @@
+{
+  "timeZone": "America/New_York",
+  "dependencies": {
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
+  "runtimeVersion": "V8",
+  "gmail": {
+    "name": "Pipely",
+    "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/receipt_black_24dp.png",
+    "contextualTriggers": [{
+      "unconditional": {
+      },
+      "onTriggerFunction": "onGmailMessage"
+    }],
+    "primaryColor": "#4285F4",
+    "secondaryColor": "#3367D6",
+    "homepageTrigger": {
+      "runFunction": "onHomepage",
+      "enabled": true
+    }
+  }
+}
