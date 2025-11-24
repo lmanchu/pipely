@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipely - Pipeline in your inbox</title>
+  <meta name="description" content="A lightweight CRM that runs directly inside Gmail. Manage deals, contacts, and pipelines without leaving your inbox.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Pipely - Pipeline in your inbox">
+  <meta property="og:description" content="A lightweight CRM that runs directly inside Gmail.">
+  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:url" content="https://lmanchu.github.io/pipely">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/logo.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #EA4335;
+      --secondary: #4285F4;
+      --dark: #202124;
+      --gray: #5F6368;
+      --light-gray: #F8F9FA;
+      --white: #FFFFFF;
+      --gradient: linear-gradient(135deg, #EA4335 0%, #4285F4 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    nav {
+      padding: 20px 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .logo img {
+      height: 36px;
+    }
+
+    nav a.btn {
+      background: var(--gradient);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    nav a.btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 160px 0 100px;
+      text-align: center;
+      background: var(--light-gray);
+    }
+
+    .hero img.hero-logo {
+      width: 280px;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--gradient);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(234, 67, 53, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--dark);
+      padding: 16px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: 2px solid var(--dark);
+      transition: all 0.2s;
+      display: inline-block;
+    }
+
+    .btn-secondary:hover {
+      background: var(--dark);
+      color: var(--white);
+    }
+
+    /* Features */
+    .features {
+      padding: 100px 0;
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+    }
+
+    .feature-card {
+      padding: 32px;
+      border-radius: 16px;
+      background: var(--white);
+      border: 1px solid rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: var(--gray);
+    }
+
+    /* How it works */
+    .how-it-works {
+      padding: 100px 0;
+      background: var(--light-gray);
+    }
+
+    .how-it-works h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+    }
+
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      text-align: center;
+      max-width: 280px;
+    }
+
+    .step-number {
+      width: 60px;
+      height: 60px;
+      background: var(--gradient);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 auto 20px;
+    }
+
+    .step h3 {
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      color: var(--gray);
+    }
+
+    /* Pricing */
+    .pricing {
+      padding: 100px 0;
+    }
+
+    .pricing h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .pricing > p {
+      text-align: center;
+      color: var(--gray);
+      margin-bottom: 60px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      padding: 40px 32px;
+      border-radius: 16px;
+      background: var(--white);
+      border: 2px solid rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--primary);
+      position: relative;
+    }
+
+    .pricing-card.featured::before {
+      content: 'Popular';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gradient);
+      color: white;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .pricing-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .pricing-card .price {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .pricing-card .price span {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--gray);
+    }
+
+    .pricing-card ul {
+      list-style: none;
+      margin: 24px 0;
+      text-align: left;
+    }
+
+    .pricing-card li {
+      padding: 8px 0;
+      color: var(--gray);
+    }
+
+    .pricing-card li::before {
+      content: '✓';
+      color: #34A853;
+      margin-right: 8px;
+      font-weight: 700;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 100px 0;
+      background: var(--dark);
+      text-align: center;
+    }
+
+    .cta h2 {
+      color: var(--white);
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .cta p {
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    /* Waitlist Form */
+    .waitlist-form {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .waitlist-form input[type="email"] {
+      flex: 1;
+      min-width: 250px;
+      padding: 16px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .waitlist-form button {
+      background: var(--gradient);
+      color: white;
+      padding: 16px 32px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .waitlist-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(234, 67, 53, 0.3);
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      background: var(--dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    footer p {
+      color: rgba(255,255,255,0.5);
+    }
+
+    footer a {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--white);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .features h2,
+      .how-it-works h2,
+      .pricing h2,
+      .cta h2 {
+        font-size: 1.75rem;
+      }
+
+      .hero img.hero-logo {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <a href="#" class="logo">
+        <img src="assets/logo.png" alt="Pipely">
+      </a>
+      <a href="#waitlist" class="btn">Join Waitlist</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <img src="assets/logo.png" alt="Pipely" class="hero-logo">
+      <h1>Pipeline in your inbox</h1>
+      <p>A lightweight CRM that runs directly inside Gmail. Manage deals, contacts, and pipelines without leaving your inbox.</p>
+      <div class="hero-cta">
+        <a href="#waitlist" class="btn-primary">Join the Waitlist</a>
+        <a href="https://github.com/lmanchu/pipely" class="btn-secondary" target="_blank">View on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="container">
+      <h2>Everything you need, nothing you don't</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📧</div>
+          <h3>Lives in Gmail</h3>
+          <p>No tab switching. See contact info and deal status right in your inbox sidebar.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👤</div>
+          <h3>Contact Enrichment</h3>
+          <p>Auto-fetch avatars, company logos, and LinkedIn profiles. Know who you're talking to.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Pipeline View</h3>
+          <p>Track deals through stages. From Lead to Won, all in one place.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>Slack Notifications</h3>
+          <p>Keep your team in sync. Get notified when deals move or new leads come in.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3>Google Sheets Backend</h3>
+          <p>Your data in a spreadsheet you own. Export, analyze, or customize anytime.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💸</div>
+          <h3>Zero Infrastructure Cost</h3>
+          <p>No servers to maintain. Runs entirely on Google's free tier.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Install the Add-on</h3>
+          <p>One-click install from Google Workspace Marketplace</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Open any Email</h3>
+          <p>Pipely sidebar shows contact info automatically</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Add to Pipeline</h3>
+          <p>One click to track the deal. Done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing">
+    <div class="container">
+      <h2>Simple, transparent pricing</h2>
+      <p>Start free, upgrade when you need more</p>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Free</h3>
+          <div class="price">$0<span>/month</span></div>
+          <ul>
+            <li>50 contacts</li>
+            <li>1 pipeline</li>
+            <li>Gmail sidebar</li>
+            <li>Basic enrichment</li>
+          </ul>
+          <a href="#waitlist" class="btn-primary" style="width: 100%;">Get Started</a>
+        </div>
+        <div class="pricing-card featured">
+          <h3>Pro</h3>
+          <div class="price">$9<span>/month</span></div>
+          <ul>
+            <li>Unlimited contacts</li>
+            <li>5 pipelines</li>
+            <li>Slack integration</li>
+            <li>Advanced enrichment</li>
+            <li>Email support</li>
+          </ul>
+          <a href="#waitlist" class="btn-primary" style="width: 100%;">Join Waitlist</a>
+        </div>
+        <div class="pricing-card">
+          <h3>Team</h3>
+          <div class="price">$19<span>/user/mo</span></div>
+          <ul>
+            <li>Everything in Pro</li>
+            <li>Unlimited pipelines</li>
+            <li>Team collaboration</li>
+            <li>Analytics dashboard</li>
+            <li>Priority support</li>
+          </ul>
+          <a href="#waitlist" class="btn-primary" style="width: 100%;">Contact Us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="waitlist">
+    <div class="container">
+      <h2>Ready to simplify your sales?</h2>
+      <p>Join the waitlist for early access and launch pricing.</p>
+      <form class="waitlist-form" action="https://formspree.io/f/xgvegled" method="POST">
+        <input type="email" name="email" placeholder="Enter your email" required>
+        <button type="submit">Join Waitlist</button>
+      </form>
+      <p style="margin-top: 16px; font-size: 0.9rem; color: rgba(255,255,255,0.5);">No spam, ever. We'll only email you about Pipely.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Pipely. Built with ❤️ by <a href="https://github.com/lmanchu">Lman</a></p>
+      <div class="footer-links">
+        <a href="https://github.com/lmanchu/pipely" target="_blank">GitHub</a>
+        <a href="docs/PRD.md">Roadmap</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
