@@ -340,7 +340,7 @@
       <a href="#" class="logo">
         <img src="assets/logo.png" alt="Pipely">
       </a>
-      <a href="https://buymeacoffee.com/lmanchu3" class="btn" target="_blank">☕ Support</a>
+      <a href="https://ko-fi.com/lmanchu" class="btn" target="_blank">☕ Support</a>
     </div>
   </nav>
 
@@ -352,7 +352,7 @@
       <p>A lightweight CRM that runs directly inside Gmail. Manage deals, contacts, and pipelines without leaving your inbox.</p>
       <div class="hero-cta">
         <a href="https://github.com/lmanchu/pipely" class="btn-primary" target="_blank">View on GitHub</a>
-        <a href="https://buymeacoffee.com/lmanchu3" class="btn-secondary" target="_blank">☕ Buy Me a Coffee</a>
+        <a href="https://ko-fi.com/lmanchu" class="btn-secondary" target="_blank">☕ Support on Ko-fi</a>
       </div>
     </div>
   </section>
@@ -425,8 +425,8 @@
     <div class="container">
       <h2>Free & Open Source</h2>
       <p>Pipely is completely free to use. If you find it helpful, consider buying me a coffee!</p>
-      <a href="https://buymeacoffee.com/lmanchu3" class="btn-primary" target="_blank" style="display: inline-flex; align-items: center; gap: 8px;">
-        <span>☕</span> Buy Me a Coffee
+      <a href="https://ko-fi.com/lmanchu" class="btn-primary" target="_blank" style="display: inline-flex; align-items: center; gap: 8px;">
+        <span>☕</span> Support on Ko-fi
       </a>
       <p style="margin-top: 24px; font-size: 0.9rem; color: rgba(255,255,255,0.5);">Your support helps keep this project alive and growing.</p>
     </div>
@@ -442,7 +442,15 @@
       </div>
     </div>
   </footer>
-  <!-- Buy Me a Coffee Widget -->
-  <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="lmanchu3" data-description="Support me on Buy me a coffee!" data-message="" data-color="#EA4335" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+  <!-- Ko-fi Widget -->
+  <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+  <script>
+    kofiWidgetOverlay.draw('lmanchu', {
+      'type': 'floating-chat',
+      'floating-chat.donateButton.text': 'Support',
+      'floating-chat.donateButton.background-color': '#EA4335',
+      'floating-chat.donateButton.text-color': '#fff'
+    });
+  </script>
 </body>
 </html>
