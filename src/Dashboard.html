@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipely Dashboard</title>
+  <style>
+    :root {
+      --primary: #4285F4;
+      --primary-dark: #3367D6;
+      --danger: #EA4335;
+      --success: #34A853;
+      --warning: #FBBC04;
+      --gray-100: #f8f9fa;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-500: #6c757d;
+      --gray-700: #495057;
+      --gray-900: #212529;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--danger) 0%, var(--primary) 100%);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-box {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      width: 250px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--gray-100);
+    }
+
+    /* Tabs */
+    .tabs {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
+    }
+
+    .tab {
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      color: var(--gray-500);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--gray-700);
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Main Content */
+    .main {
+      padding: 1.5rem 2rem;
+    }
+
+    /* Pipeline Board (Kanban) */
+    .pipeline-board {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: 1rem;
+    }
+
+    .stage-column {
+      min-width: 280px;
+      max-width: 280px;
+      background: var(--gray-200);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-header {
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--gray-300);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stage-count {
+      background: var(--gray-500);
+      color: white;
+      padding: 0.1rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
+
+    .stage-deals {
+      padding: 0.5rem;
+      flex: 1;
+      overflow-y: auto;
+      max-height: calc(100vh - 250px);
+    }
+
+    /* Deal Card */
+    .deal-card {
+      background: white;
+      border-radius: 6px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .deal-card:hover {
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transform: translateY(-1px);
+    }
+
+    .deal-card.dragging {
+      opacity: 0.5;
+    }
+
+    .deal-title {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    .deal-contact {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-bottom: 0.5rem;
+    }
+
+    .deal-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .deal-value {
+      font-weight: 600;
+      color: var(--success);
+      font-size: 0.85rem;
+    }
+
+    .deal-tags {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: var(--gray-200);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.7rem;
+      color: var(--gray-700);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      min-width: 150px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.1rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray-500);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .btn-secondary {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-success {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray-500);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Accounts Tab */
+    .accounts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .account-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .account-card:hover {
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .account-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .account-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      object-fit: contain;
+      background: var(--gray-100);
+    }
+
+    .account-name {
+      font-weight: 600;
+    }
+
+    .account-domain {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+    }
+
+    .account-stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--gray-700);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .stats-bar {
+        flex-wrap: wrap;
+      }
+
+      .stat-card {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1>
+      <img src="https://raw.githubusercontent.com/lmanchu/pipely/main/assets/icon.png" alt="Pipely" width="32" height="32">
+      Pipely Dashboard
+    </h1>
+    <div class="header-actions">
+      <input type="text" class="search-box" placeholder="Search deals..." id="searchInput" onkeyup="filterDeals()">
+      <button class="btn btn-primary" onclick="refreshData()">Refresh</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <div class="tab active" data-tab="pipeline" onclick="switchTab('pipeline')">Pipeline</div>
+    <div class="tab" data-tab="accounts" onclick="switchTab('accounts')">Accounts</div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-card">
+        <div class="stat-label">Total Deals</div>
+        <div class="stat-value" id="statTotalDeals">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pipeline Value</div>
+        <div class="stat-value" id="statTotalValue">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Won This Month</div>
+        <div class="stat-value" id="statWonDeals">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Accounts</div>
+        <div class="stat-value" id="statAccounts">-</div>
+      </div>
+    </div>
+
+    <!-- Pipeline Tab -->
+    <div id="pipelineTab">
+      <div class="loading" id="pipelineLoading">
+        <div class="spinner"></div>
+        <div>Loading pipeline...</div>
+      </div>
+      <div class="pipeline-board" id="pipelineBoard"></div>
+    </div>
+
+    <!-- Accounts Tab -->
+    <div id="accountsTab" style="display: none;">
+      <div class="loading" id="accountsLoading">
+        <div class="spinner"></div>
+        <div>Loading accounts...</div>
+      </div>
+      <div class="accounts-grid" id="accountsGrid"></div>
+    </div>
+  </main>
+
+  <!-- Deal Modal -->
+  <div class="modal-overlay" id="dealModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Deal Details</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="dealTitle">
+        </div>
+        <div class="form-group">
+          <label>Contact Email</label>
+          <input type="email" id="dealContact" readonly>
+        </div>
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="dealValue">
+        </div>
+        <div class="form-group">
+          <label>Stage</label>
+          <select id="dealStage"></select>
+        </div>
+        <div class="form-group">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="dealTags">
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="dealNotes"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="deleteDeal()">Delete</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-success" onclick="saveDeal()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global state
+    let allDeals = [];
+    let allAccounts = [];
+    let stages = [];
+    let currentDealId = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPipelineData();
+    });
+
+    // Load pipeline data
+    function loadPipelineData() {
+      document.getElementById('pipelineLoading').style.display = 'block';
+      document.getElementById('pipelineBoard').innerHTML = '';
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          allDeals = data.deals || [];
+          stages = data.stages || [];
+          allAccounts = data.accounts || [];
+          renderPipeline();
+          renderStats();
+          document.getElementById('pipelineLoading').style.display = 'none';
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('pipelineLoading').innerHTML =
+            '<div style="color: var(--danger)">Error loading data: ' + error.message + '</div>';
+        })
+        .getDashboardData();
+    }
+
+    // Render pipeline board
+    function renderPipeline() {
+      const board = document.getElementById('pipelineBoard');
+      board.innerHTML = '';
+
+      stages.forEach(function(stage) {
+        const stageDeals = allDeals.filter(d => d.stage === stage);
+        const stageValue = stageDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
+
+        const column = document.createElement('div');
+        column.className = 'stage-column';
+        column.innerHTML = `
+          <div class="stage-header">
+            <span>${stage}</span>
+            <span class="stage-count">${stageDeals.length}</span>
+          </div>
+          <div class="stage-deals" data-stage="${stage}"
+               ondragover="handleDragOver(event)"
+               ondrop="handleDrop(event, '${stage}')">
+            ${stageDeals.map(deal => renderDealCard(deal)).join('')}
+          </div>
+        `;
+        board.appendChild(column);
+      });
+    }
+
+    // Render deal card
+    function renderDealCard(deal) {
+      const tags = deal.tags ? deal.tags.split(',').filter(t => t.trim()) : [];
+      const tagsHtml = tags.map(t => `<span class="tag">${t.trim()}</span>`).join('');
+
+      return `
+        <div class="deal-card" draggable="true"
+             data-deal-id="${deal.deal_id}"
+             ondragstart="handleDragStart(event)"
+             ondragend="handleDragEnd(event)"
+             onclick="openDealModal('${deal.deal_id}')">
+          <div class="deal-title">${deal.title || 'Untitled'}</div>
+          <div class="deal-contact">${deal.contact_email || '-'}</div>
+          <div class="deal-meta">
+            <span class="deal-value">${deal.currency || 'USD'} ${formatNumber(deal.value)}</span>
+            <div class="deal-tags">${tagsHtml}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render stats
+    function renderStats() {
+      const totalDeals = allDeals.length;
+      const totalValue = allDeals
+        .filter(d => d.stage !== 'Closed Lost')
+        .reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
+      const wonDeals = allDeals.filter(d => d.stage === 'Closed Won').length;
+
+      document.getElementById('statTotalDeals').textContent = totalDeals;
+      document.getElementById('statTotalValue').textContent = '$' + formatNumber(totalValue);
+      document.getElementById('statWonDeals').textContent = wonDeals;
+      document.getElementById('statAccounts').textContent = allAccounts.length;
+    }
+
+    // Format number
+    function formatNumber(num) {
+      return (parseFloat(num) || 0).toLocaleString();
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+
+      document.getElementById('pipelineTab').style.display = tab === 'pipeline' ? 'block' : 'none';
+      document.getElementById('accountsTab').style.display = tab === 'accounts' ? 'block' : 'none';
+
+      if (tab === 'accounts' && document.getElementById('accountsGrid').innerHTML === '') {
+        loadAccounts();
+      }
+    }
+
+    // Load accounts
+    function loadAccounts() {
+      document.getElementById('accountsLoading').style.display = 'block';
+
+      google.script.run
+        .withSuccessHandler(function(accounts) {
+          allAccounts = accounts || [];
+          renderAccounts();
+          document.getElementById('accountsLoading').style.display = 'none';
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('accountsLoading').innerHTML =
+            '<div style="color: var(--danger)">Error: ' + error.message + '</div>';
+        })
+        .getAccountsData();
+    }
+
+    // Render accounts
+    function renderAccounts() {
+      const grid = document.getElementById('accountsGrid');
+      grid.innerHTML = allAccounts.map(account => `
+        <div class="account-card" onclick="viewAccount('${account.domain}')">
+          <div class="account-header">
+            <img class="account-logo" src="${account.logo_url || 'https://via.placeholder.com/40'}"
+                 onerror="this.src='https://via.placeholder.com/40'">
+            <div>
+              <div class="account-name">${account.company_name || account.domain}</div>
+              <div class="account-domain">${account.domain}</div>
+            </div>
+          </div>
+          <div class="account-stats">
+            <span>${account.contact_count || 0} contacts</span>
+            <span>${account.deal_count || 0} deals</span>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('statAccounts').textContent = allAccounts.length;
+    }
+
+    // Drag and drop
+    function handleDragStart(event) {
+      event.target.classList.add('dragging');
+      event.dataTransfer.setData('text/plain', event.target.dataset.dealId);
+    }
+
+    function handleDragEnd(event) {
+      event.target.classList.remove('dragging');
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+    }
+
+    function handleDrop(event, newStage) {
+      event.preventDefault();
+      const dealId = event.dataTransfer.getData('text/plain');
+
+      // Find and update deal
+      const deal = allDeals.find(d => d.deal_id === dealId);
+      if (deal && deal.stage !== newStage) {
+        const oldStage = deal.stage;
+        deal.stage = newStage;
+        renderPipeline();
+
+        // Save to backend
+        google.script.run
+          .withSuccessHandler(function() {
+            // Success - already updated UI
+          })
+          .withFailureHandler(function(error) {
+            // Revert on error
+            deal.stage = oldStage;
+            renderPipeline();
+            alert('Error updating stage: ' + error.message);
+          })
+          .updateDealStage(dealId, newStage);
+      }
+    }
+
+    // Modal functions
+    function openDealModal(dealId) {
+      currentDealId = dealId;
+      const deal = allDeals.find(d => d.deal_id === dealId);
+      if (!deal) return;
+
+      document.getElementById('modalTitle').textContent = deal.title || 'Deal Details';
+      document.getElementById('dealTitle').value = deal.title || '';
+      document.getElementById('dealContact').value = deal.contact_email || '';
+      document.getElementById('dealValue').value = deal.value || 0;
+      document.getElementById('dealTags').value = deal.tags || '';
+      document.getElementById('dealNotes').value = deal.notes || '';
+
+      // Populate stage dropdown
+      const stageSelect = document.getElementById('dealStage');
+      stageSelect.innerHTML = stages.map(s =>
+        `<option value="${s}" ${s === deal.stage ? 'selected' : ''}>${s}</option>`
+      ).join('');
+
+      document.getElementById('dealModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('dealModal').classList.remove('show');
+      currentDealId = null;
+    }
+
+    function saveDeal() {
+      if (!currentDealId) return;
+
+      const updates = {
+        title: document.getElementById('dealTitle').value,
+        value: document.getElementById('dealValue').value,
+        stage: document.getElementById('dealStage').value,
+        tags: document.getElementById('dealTags').value,
+        notes: document.getElementById('dealNotes').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function() {
+          // Update local data
+          const deal = allDeals.find(d => d.deal_id === currentDealId);
+          if (deal) {
+            Object.assign(deal, updates);
+          }
+          renderPipeline();
+          closeModal();
+        })
+        .withFailureHandler(function(error) {
+          alert('Error saving: ' + error.message);
+        })
+        .updateDealFromDashboard(currentDealId, updates);
+    }
+
+    function deleteDeal() {
+      if (!currentDealId) return;
+      if (!confirm('Are you sure you want to delete this deal?')) return;
+
+      google.script.run
+        .withSuccessHandler(function() {
+          allDeals = allDeals.filter(d => d.deal_id !== currentDealId);
+          renderPipeline();
+          renderStats();
+          closeModal();
+        })
+        .withFailureHandler(function(error) {
+          alert('Error deleting: ' + error.message);
+        })
+        .deleteDealFromDashboard(currentDealId);
+    }
+
+    // Search
+    function filterDeals() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.deal-card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? 'block' : 'none';
+      });
+    }
+
+    // Refresh
+    function refreshData() {
+      loadPipelineData();
+      if (document.getElementById('accountsTab').style.display !== 'none') {
+        loadAccounts();
+      }
+    }
+
+    // View account (placeholder)
+    function viewAccount(domain) {
+      alert('Account details for ' + domain + ' - Coming soon!');
+    }
+  </script>
+</body>
+</html>

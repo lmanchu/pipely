@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-11-24
+
+### Added
+- **Dashboard Web UI**: Standalone web app for pipeline management
+  - Kanban-style pipeline board with drag & drop
+  - Deal cards with title, contact, value, and tags
+  - Click to edit deal details (title, value, stage, tags, notes)
+  - Delete deals from modal
+  - Accounts tab with company cards
+  - Stats bar: Total Deals, Pipeline Value, Won Deals, Accounts
+  - Search/filter deals
+  - Responsive design for mobile
+- New web app endpoints: `doGet()`, `getDashboardData()`, `getAccountsData()`
+- Dashboard functions: `updateDealStage()`, `updateDealFromDashboard()`, `deleteDealFromDashboard()`
+
+### How to Deploy Dashboard
+1. Open Apps Script editor
+2. Deploy > New deployment > Web app
+3. Execute as: Me, Access: Anyone with Google account
+4. Copy the web app URL
+
 ## [1.3.0] - 2025-11-24
 
 ### Added

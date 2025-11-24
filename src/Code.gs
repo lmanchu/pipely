@@ -3,6 +3,132 @@
  * Main entry point for Pipely.
  */
 
+// ============ WEB APP ENDPOINTS ============
+
+/**
+ * Serves the Dashboard web app.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.HTML.HtmlOutput} The HTML page.
+ */
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('Dashboard')
+    .setTitle('Pipely Dashboard')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * Gets all data for the dashboard.
+ * @returns {Object} Dashboard data including deals, stages, and accounts.
+ */
+function getDashboardData() {
+  const deals = getDeals();
+  const stages = getSetting('pipeline_stages').split(',');
+
+  // Get unique domains from deals and contacts
+  const accountDomains = new Set();
+  deals.forEach(deal => {
+    if (deal.contact_email && deal.contact_email.includes('@')) {
+      const domain = deal.contact_email.split('@')[1].toLowerCase();
+      if (!isFreemailDomain(domain)) {
+        accountDomains.add(domain);
+      }
+    }
+  });
+
+  // Build account summary
+  const accounts = [];
+  accountDomains.forEach(domain => {
+    const accountData = getAccountByDomain(domain);
+    const contacts = getContactsByDomain(domain);
+    const dealCount = deals.filter(d =>
+      d.contact_email && d.contact_email.toLowerCase().endsWith('@' + domain)
+    ).length;
+
+    accounts.push({
+      domain: domain,
+      company_name: accountData?.company_name || guessCompanyFromDomain(domain),
+      logo_url: `https://logo.clearbit.com/${domain}`,
+      contact_count: contacts.length,
+      deal_count: dealCount
+    });
+  });
+
+  return {
+    deals: deals,
+    stages: stages,
+    accounts: accounts
+  };
+}
+
+/**
+ * Gets accounts data for dashboard.
+ * @returns {Array<Object>} List of accounts with stats.
+ */
+function getAccountsData() {
+  const ss = getOrCreateSpreadsheet();
+  const accountSheet = ss.getSheetByName('Accounts');
+
+  if (!accountSheet || accountSheet.getLastRow() <= 1) {
+    return [];
+  }
+
+  const data = accountSheet.getDataRange().getValues();
+  const headers = data.shift();
+  const deals = getDeals();
+
+  return data.map(row => {
+    const account = {};
+    headers.forEach((header, index) => {
+      account[header] = row[index];
+    });
+
+    // Add stats
+    const contacts = getContactsByDomain(account.domain);
+    const dealCount = deals.filter(d =>
+      d.contact_email && d.contact_email.toLowerCase().endsWith('@' + account.domain)
+    ).length;
+
+    account.contact_count = contacts.length;
+    account.deal_count = dealCount;
+    account.logo_url = account.logo_url || `https://logo.clearbit.com/${account.domain}`;
+
+    return account;
+  });
+}
+
+/**
+ * Updates deal stage from dashboard (drag & drop).
+ * @param {string} dealId The deal ID.
+ * @param {string} newStage The new stage.
+ * @returns {boolean} Success status.
+ */
+function updateDealStage(dealId, newStage) {
+  const deal = updateDeal(dealId, { stage: newStage });
+  return deal !== null;
+}
+
+/**
+ * Updates deal from dashboard modal.
+ * @param {string} dealId The deal ID.
+ * @param {Object} updates The fields to update.
+ * @returns {boolean} Success status.
+ */
+function updateDealFromDashboard(dealId, updates) {
+  const deal = updateDeal(dealId, updates);
+  return deal !== null;
+}
+
+/**
+ * Deletes deal from dashboard.
+ * @param {string} dealId The deal ID.
+ * @returns {boolean} Success status.
+ */
+function deleteDealFromDashboard(dealId) {
+  return deleteDeal(dealId);
+}
+
+// ============ GMAIL ADD-ON TRIGGERS ============
+
 /**
  * Contextual trigger that runs when a user opens an email.
  * @param {Object} e The event object.
