@@ -232,3 +232,172 @@ function onDeleteDeal(e) {
       .build();
   }
 }
+
+// ============ ACCOUNT MAP CALLBACKS ============
+
+/**
+ * Callback for clicking on a contact in Account Map.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.Card} The contact detail card.
+ */
+function onContactClick(e) {
+  const email = e.parameters.email;
+  const contact = getContactByEmail(email);
+
+  if (!contact) {
+    return CardService.newCardBuilder()
+      .setHeader(CardService.newCardHeader().setTitle('Error'))
+      .addSection(CardService.newCardSection()
+        .addWidget(CardService.newTextParagraph().setText('Contact not found.')))
+      .build();
+  }
+
+  return buildContactDetailCard(contact);
+}
+
+/**
+ * Callback for updating contact role information.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onUpdateContactRole(e) {
+  const email = e.parameters.email;
+  const jobTitle = e.formInput.job_title || '';
+  const jobLevel = e.formInput.job_level || 'Unknown';
+  const relationship = e.formInput.relationship || 'Unknown';
+
+  // Auto-guess job level if job title changed and level is still Unknown
+  let finalJobLevel = jobLevel;
+  if (jobTitle && jobLevel === 'Unknown') {
+    finalJobLevel = guessJobLevel(jobTitle);
+  }
+
+  const updates = {
+    job_title: jobTitle,
+    job_level: finalJobLevel,
+    relationship: relationship
+  };
+
+  const contact = updateContact(email, updates);
+
+  if (contact) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Contact updated!'))
+      .setNavigation(CardService.newNavigation().updateCard(buildContactDetailCard(contact)))
+      .build();
+  } else {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Error updating contact.'))
+      .build();
+  }
+}
+
+/**
+ * Callback for adding a new contact to an account.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.Card} The add contact form.
+ */
+function onAddContactToAccount(e) {
+  const domain = e.parameters.domain;
+
+  const inputEmail = CardService.newTextInput()
+    .setFieldName('email')
+    .setTitle('Email')
+    .setHint(`e.g., john@${domain}`);
+
+  const inputName = CardService.newTextInput()
+    .setFieldName('name')
+    .setTitle('Name');
+
+  const inputJobTitle = CardService.newTextInput()
+    .setFieldName('job_title')
+    .setTitle('Job Title');
+
+  const jobLevelSelect = CardService.newSelectionInput()
+    .setFieldName('job_level')
+    .setTitle('Job Level')
+    .setType(CardService.SelectionInputType.DROPDOWN);
+
+  ['C-Level', 'VP', 'Director', 'Manager', 'Individual', 'Unknown'].forEach(level => {
+    jobLevelSelect.addItem(level, level, level === 'Unknown');
+  });
+
+  const relationshipSelect = CardService.newSelectionInput()
+    .setFieldName('relationship')
+    .setTitle('Relationship')
+    .setType(CardService.SelectionInputType.DROPDOWN);
+
+  ['Decision Maker', 'Economic Buyer', 'Champion', 'Influencer', 'Blocker', 'User', 'Unknown'].forEach(rel => {
+    relationshipSelect.addItem(rel, rel, rel === 'Unknown');
+  });
+
+  const saveAction = CardService.newAction()
+    .setFunctionName('onSaveNewContact')
+    .setParameters({ domain: domain });
+
+  const saveButton = CardService.newTextButton()
+    .setText('Add Contact')
+    .setOnClickAction(saveAction);
+
+  const section = CardService.newCardSection()
+    .addWidget(inputEmail)
+    .addWidget(inputName)
+    .addWidget(inputJobTitle)
+    .addWidget(jobLevelSelect)
+    .addWidget(relationshipSelect)
+    .addWidget(saveButton);
+
+  return CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle('Add Contact'))
+    .addSection(section)
+    .build();
+}
+
+/**
+ * Callback for saving a new contact.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onSaveNewContact(e) {
+  const domain = e.parameters.domain;
+  const form = e.formInput;
+
+  if (!form.email || !form.email.includes('@')) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Please enter a valid email.'))
+      .build();
+  }
+
+  // Verify email belongs to the domain
+  const emailDomain = form.email.split('@')[1].toLowerCase();
+  if (emailDomain !== domain.toLowerCase()) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText(`Email must be from ${domain}`))
+      .build();
+  }
+
+  // Auto-guess job level if not set
+  let jobLevel = form.job_level || 'Unknown';
+  if (form.job_title && jobLevel === 'Unknown') {
+    jobLevel = guessJobLevel(form.job_title);
+  }
+
+  // Create the contact
+  const contact = createOrUpdateContact({
+    email: form.email,
+    name: form.name || '',
+    company: domain
+  });
+
+  // Update role info
+  updateContact(form.email, {
+    job_title: form.job_title || '',
+    job_level: jobLevel,
+    relationship: form.relationship || 'Unknown'
+  });
+
+  return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText('Contact added!'))
+    .setNavigation(CardService.newNavigation().popCard())
+    .build();
+}

@@ -40,7 +40,7 @@ function initializeSheets(ss) {
     },
     {
       name: 'Contacts',
-      headers: ['email', 'name', 'company', 'phone', 'linkedin', 'notes', 'created_at', 'avatar_url', 'company_logo_url', 'linkedin_guess_url', 'enriched_at']
+      headers: ['email', 'name', 'company', 'phone', 'linkedin', 'notes', 'created_at', 'avatar_url', 'company_logo_url', 'linkedin_guess_url', 'enriched_at', 'job_title', 'job_level', 'relationship']
     },
     {
       name: 'Activities',
@@ -387,4 +387,179 @@ function getDealById(dealId) {
   }
 
   return null;
+}
+
+// ============ ACCOUNT MAP FUNCTIONS ============
+
+/**
+ * Job level hierarchy for sorting (higher = more senior)
+ */
+const JOB_LEVELS = {
+  'C-Level': 5,
+  'VP': 4,
+  'Director': 3,
+  'Manager': 2,
+  'Individual': 1,
+  'Unknown': 0
+};
+
+/**
+ * Relationship types for Account Map
+ */
+const RELATIONSHIP_TYPES = [
+  'Decision Maker',
+  'Economic Buyer',
+  'Champion',
+  'Influencer',
+  'Blocker',
+  'User',
+  'Unknown'
+];
+
+/**
+ * Gets all contacts for a given domain (company).
+ * @param {string} domain The company domain.
+ * @returns {Array<Object>} List of contacts sorted by job level.
+ */
+function getContactsByDomain(domain) {
+  const ss = getOrCreateSpreadsheet();
+  const sheet = ss.getSheetByName('Contacts');
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+  const emailIndex = headers.indexOf('email');
+
+  const contacts = [];
+
+  for (let i = 0; i < data.length; i++) {
+    const email = data[i][emailIndex];
+    if (email && email.includes('@')) {
+      const contactDomain = email.split('@')[1].toLowerCase();
+      if (contactDomain === domain.toLowerCase()) {
+        const contact = {};
+        headers.forEach((header, index) => {
+          contact[header] = data[i][index];
+        });
+        contacts.push(contact);
+      }
+    }
+  }
+
+  // Sort by job level (descending)
+  contacts.sort((a, b) => {
+    const levelA = JOB_LEVELS[a.job_level] || 0;
+    const levelB = JOB_LEVELS[b.job_level] || 0;
+    return levelB - levelA;
+  });
+
+  return contacts;
+}
+
+/**
+ * Updates a contact's fields.
+ * @param {string} email The contact email (primary key).
+ * @param {Object} updates The fields to update.
+ * @returns {Object|null} The updated contact or null.
+ */
+function updateContact(email, updates) {
+  const ss = getOrCreateSpreadsheet();
+  const sheet = ss.getSheetByName('Contacts');
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const emailIndex = headers.indexOf('email');
+
+  // Find the row
+  let rowIndex = -1;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][emailIndex] === email) {
+      rowIndex = i + 1; // 1-based for sheet operations
+      break;
+    }
+  }
+
+  if (rowIndex === -1) return null;
+
+  // Update fields
+  Object.keys(updates).forEach(key => {
+    const colIndex = headers.indexOf(key);
+    if (colIndex !== -1) {
+      sheet.getRange(rowIndex, colIndex + 1).setValue(updates[key]);
+    }
+  });
+
+  // Return updated contact
+  const updatedRow = sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0];
+  const contact = {};
+  headers.forEach((header, index) => {
+    contact[header] = updatedRow[index];
+  });
+
+  return contact;
+}
+
+/**
+ * Guesses job level from job title using keyword matching.
+ * @param {string} jobTitle The job title.
+ * @returns {string} The guessed job level.
+ */
+function guessJobLevel(jobTitle) {
+  if (!jobTitle) return 'Unknown';
+
+  const title = jobTitle.toLowerCase();
+
+  // C-Level
+  if (title.includes('ceo') || title.includes('cto') || title.includes('cfo') ||
+      title.includes('coo') || title.includes('cmo') || title.includes('chief') ||
+      title.includes('founder') || title.includes('president') || title.includes('owner')) {
+    return 'C-Level';
+  }
+
+  // VP
+  if (title.includes('vp') || title.includes('vice president') ||
+      title.includes('svp') || title.includes('evp')) {
+    return 'VP';
+  }
+
+  // Director
+  if (title.includes('director') || title.includes('head of')) {
+    return 'Director';
+  }
+
+  // Manager
+  if (title.includes('manager') || title.includes('lead') ||
+      title.includes('supervisor') || title.includes('team lead')) {
+    return 'Manager';
+  }
+
+  // Individual contributors
+  if (title.includes('engineer') || title.includes('developer') ||
+      title.includes('analyst') || title.includes('specialist') ||
+      title.includes('associate') || title.includes('coordinator') ||
+      title.includes('representative') || title.includes('executive')) {
+    return 'Individual';
+  }
+
+  return 'Unknown';
+}
+
+/**
+ * Adds new columns to existing Contacts sheet if they don't exist.
+ * Call this once to migrate existing data.
+ */
+function migrateContactsSheet() {
+  const ss = getOrCreateSpreadsheet();
+  const sheet = ss.getSheetByName('Contacts');
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+  const newColumns = ['job_title', 'job_level', 'relationship'];
+  let addedColumns = 0;
+
+  newColumns.forEach(col => {
+    if (!headers.includes(col)) {
+      const newColIndex = sheet.getLastColumn() + 1;
+      sheet.getRange(1, newColIndex).setValue(col).setFontWeight('bold');
+      addedColumns++;
+    }
+  });
+
+  return addedColumns;
 }

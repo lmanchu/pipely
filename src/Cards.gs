@@ -80,6 +80,12 @@ function buildContactCard(contact, deals) {
     if (companySection) {
       card.addSection(companySection);
     }
+
+    // Add Account Map section
+    const accountMapSection = buildAccountMapSection(domain);
+    if (accountMapSection) {
+      card.addSection(accountMapSection);
+    }
   }
 
   if (deals && deals.length > 0) {
@@ -361,6 +367,197 @@ function buildDealCard(deal) {
     .addSection(notesSection)
     .addSection(deleteSection)
     .build();
+}
+
+/**
+ * Builds the Account Map section showing org chart for a domain.
+ * @param {string} domain The company domain.
+ * @returns {GoogleAppsScript.Card_Service.CardSection|null} The account map section or null.
+ */
+function buildAccountMapSection(domain) {
+  try {
+    const contacts = getContactsByDomain(domain);
+
+    if (contacts.length === 0) {
+      return null;
+    }
+
+    const section = CardService.newCardSection()
+      .setHeader(`Account Map (${contacts.length})`)
+      .setCollapsible(true)
+      .setNumUncollapsibleWidgets(Math.min(contacts.length, 3));
+
+    // Group contacts by job level
+    const byLevel = {};
+    contacts.forEach(contact => {
+      const level = contact.job_level || 'Unknown';
+      if (!byLevel[level]) byLevel[level] = [];
+      byLevel[level].push(contact);
+    });
+
+    // Display in order: C-Level, VP, Director, Manager, Individual, Unknown
+    const levelOrder = ['C-Level', 'VP', 'Director', 'Manager', 'Individual', 'Unknown'];
+
+    levelOrder.forEach(level => {
+      if (byLevel[level] && byLevel[level].length > 0) {
+        byLevel[level].forEach(contact => {
+          // Build contact display
+          const name = contact.name || contact.email.split('@')[0];
+          const title = contact.job_title || '';
+          const relationship = contact.relationship || '';
+
+          // Create relationship badge
+          let badge = '';
+          if (relationship === 'Decision Maker') badge = ' [DM]';
+          else if (relationship === 'Economic Buyer') badge = ' [EB]';
+          else if (relationship === 'Champion') badge = ' [CH]';
+          else if (relationship === 'Blocker') badge = ' [BL]';
+          else if (relationship === 'Influencer') badge = ' [IN]';
+
+          const displayText = title ? `${name}${badge}` : `${name}${badge}`;
+          const bottomLabel = title ? `${level} - ${title}` : level;
+
+          // Use DecoratedText for avatar if available
+          if (contact.avatar_url) {
+            section.addWidget(
+              CardService.newDecoratedText()
+                .setText(displayText)
+                .setBottomLabel(bottomLabel)
+                .setStartIcon(CardService.newIconImage()
+                  .setIconUrl(contact.avatar_url)
+                  .setAltText(name))
+                .setOnClickAction(CardService.newAction()
+                  .setFunctionName('onContactClick')
+                  .setParameters({ email: contact.email }))
+            );
+          } else {
+            section.addWidget(
+              CardService.newKeyValue()
+                .setContent(displayText)
+                .setBottomLabel(bottomLabel)
+                .setIcon(CardService.Icon.PERSON)
+                .setOnClickAction(CardService.newAction()
+                  .setFunctionName('onContactClick')
+                  .setParameters({ email: contact.email }))
+            );
+          }
+        });
+      }
+    });
+
+    // Add "Add Contact" button
+    section.addWidget(
+      CardService.newTextButton()
+        .setText('+ Add Contact to Account')
+        .setOnClickAction(CardService.newAction()
+          .setFunctionName('onAddContactToAccount')
+          .setParameters({ domain: domain }))
+    );
+
+    return section;
+  } catch (e) {
+    console.warn('Failed to build account map:', e.message);
+    return null;
+  }
+}
+
+/**
+ * Builds a contact detail card with edit capabilities.
+ * @param {Object} contact The contact object.
+ * @returns {GoogleAppsScript.Card_Service.Card} The contact detail card.
+ */
+function buildContactDetailCard(contact) {
+  const card = CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle('Contact Details'));
+
+  // Avatar section
+  const infoSection = CardService.newCardSection();
+
+  if (contact.avatar_url) {
+    infoSection.addWidget(
+      CardService.newImage()
+        .setImageUrl(contact.avatar_url)
+        .setAltText(contact.name || 'Avatar')
+    );
+  }
+
+  infoSection
+    .addWidget(CardService.newKeyValue()
+      .setTopLabel('Name')
+      .setContent(contact.name || '-')
+      .setIcon(CardService.Icon.PERSON))
+    .addWidget(CardService.newKeyValue()
+      .setTopLabel('Email')
+      .setContent(contact.email)
+      .setIcon(CardService.Icon.EMAIL))
+    .addWidget(CardService.newKeyValue()
+      .setTopLabel('Company')
+      .setContent(contact.company || '-')
+      .setIcon(CardService.Icon.MEMBERSHIP));
+
+  card.addSection(infoSection);
+
+  // Job info section (editable)
+  const jobSection = CardService.newCardSection()
+    .setHeader('Role Information');
+
+  // Job Title input
+  const jobTitleInput = CardService.newTextInput()
+    .setFieldName('job_title')
+    .setTitle('Job Title')
+    .setValue(contact.job_title || '');
+
+  // Job Level dropdown
+  const jobLevelSelect = CardService.newSelectionInput()
+    .setFieldName('job_level')
+    .setTitle('Job Level')
+    .setType(CardService.SelectionInputType.DROPDOWN);
+
+  ['C-Level', 'VP', 'Director', 'Manager', 'Individual', 'Unknown'].forEach(level => {
+    jobLevelSelect.addItem(level, level, level === (contact.job_level || 'Unknown'));
+  });
+
+  // Relationship dropdown
+  const relationshipSelect = CardService.newSelectionInput()
+    .setFieldName('relationship')
+    .setTitle('Relationship')
+    .setType(CardService.SelectionInputType.DROPDOWN);
+
+  ['Decision Maker', 'Economic Buyer', 'Champion', 'Influencer', 'Blocker', 'User', 'Unknown'].forEach(rel => {
+    relationshipSelect.addItem(rel, rel, rel === (contact.relationship || 'Unknown'));
+  });
+
+  const updateAction = CardService.newAction()
+    .setFunctionName('onUpdateContactRole')
+    .setParameters({ email: contact.email });
+
+  const updateButton = CardService.newTextButton()
+    .setText('Update Role')
+    .setOnClickAction(updateAction);
+
+  jobSection
+    .addWidget(jobTitleInput)
+    .addWidget(jobLevelSelect)
+    .addWidget(relationshipSelect)
+    .addWidget(updateButton);
+
+  card.addSection(jobSection);
+
+  // LinkedIn section
+  if (contact.linkedin || contact.linkedin_guess_url) {
+    const linkedinUrl = contact.linkedin || contact.linkedin_guess_url;
+    const linkedinSection = CardService.newCardSection();
+    linkedinSection.addWidget(
+      CardService.newTextButton()
+        .setText('View LinkedIn')
+        .setOpenLink(CardService.newOpenLink()
+          .setUrl(linkedinUrl)
+          .setOpenAs(CardService.OpenAs.OVERLAY))
+    );
+    card.addSection(linkedinSection);
+  }
+
+  return card.build();
 }
 
 /**
