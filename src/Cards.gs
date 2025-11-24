@@ -340,6 +340,45 @@ function buildDealCard(deal) {
     .addWidget(notesInput)
     .addWidget(updateNotesButton);
 
+  // Follow-up section (Google Tasks integration)
+  const followUpSection = CardService.newCardSection()
+    .setHeader('Follow-up Actions');
+
+  // Quick follow-up buttons
+  const presets = [
+    { label: 'Call Tomorrow', action: 'call', days: 1 },
+    { label: 'Email Today', action: 'email', days: 0 },
+    { label: 'Meeting (3 days)', action: 'meeting', days: 3 },
+    { label: 'Check In (1 week)', action: 'check_in', days: 7 }
+  ];
+
+  const buttonSet = CardService.newButtonSet();
+
+  presets.forEach(preset => {
+    buttonSet.addButton(
+      CardService.newTextButton()
+        .setText(preset.label)
+        .setOnClickAction(CardService.newAction()
+          .setFunctionName('onCreateFollowUp')
+          .setParameters({
+            dealId: deal.deal_id,
+            action: preset.action,
+            days: String(preset.days)
+          }))
+    );
+  });
+
+  followUpSection.addWidget(buttonSet);
+
+  // Custom follow-up
+  followUpSection.addWidget(
+    CardService.newTextButton()
+      .setText('+ Custom Follow-up...')
+      .setOnClickAction(CardService.newAction()
+        .setFunctionName('onCustomFollowUp')
+        .setParameters({ dealId: deal.deal_id }))
+  );
+
   // Delete section (danger zone)
   const deleteSection = CardService.newCardSection()
     .setHeader('Danger Zone')
@@ -364,6 +403,7 @@ function buildDealCard(deal) {
     .setHeader(CardService.newCardHeader().setTitle('Deal Details'))
     .addSection(infoSection)
     .addSection(tagsSection)
+    .addSection(followUpSection)
     .addSection(notesSection)
     .addSection(deleteSection)
     .build();

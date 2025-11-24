@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-11-24
+
+### Added
+- **Google Tasks Integration**: Create follow-up tasks directly from Deal details
+  - Quick buttons: Call Tomorrow, Email Today, Meeting (3 days), Check In (1 week)
+  - Custom follow-up form with action type, description, and due date
+  - Tasks created in "Pipely Follow-ups" task list
+  - Task includes deal title, contact, value, and stage info
+- New `Tasks.gs` with Google Tasks API integration
+- New OAuth scope: `https://www.googleapis.com/auth/tasks`
+- Advanced Service: Tasks API v1
+
+### UI Changes
+- Deal detail card now shows "Follow-up Actions" section with quick action buttons
+- "+ Custom Follow-up..." button opens full form
+
 ## [1.4.0] - 2025-11-24
 
 ### Added

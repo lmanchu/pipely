@@ -359,6 +359,156 @@ function onDeleteDeal(e) {
   }
 }
 
+// ============ FOLLOW-UP CALLBACKS (Google Tasks) ============
+
+/**
+ * Callback for creating a quick follow-up task.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onCreateFollowUp(e) {
+  const dealId = e.parameters.dealId;
+  const action = e.parameters.action;
+  const days = parseInt(e.parameters.days) || 1;
+
+  try {
+    const task = createQuickFollowUp(dealId, action, days);
+
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification()
+        .setText('Follow-up added to Google Tasks!'))
+      .build();
+  } catch (error) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification()
+        .setText('Error: ' + error.message))
+      .build();
+  }
+}
+
+/**
+ * Callback for custom follow-up form.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.Card} The custom follow-up form.
+ */
+function onCustomFollowUp(e) {
+  const dealId = e.parameters.dealId;
+  const deal = getDealById(dealId);
+
+  if (!deal) {
+    return CardService.newCardBuilder()
+      .setHeader(CardService.newCardHeader().setTitle('Error'))
+      .addSection(CardService.newCardSection()
+        .addWidget(CardService.newTextParagraph().setText('Deal not found.')))
+      .build();
+  }
+
+  // Action type dropdown
+  const actionSelect = CardService.newSelectionInput()
+    .setFieldName('action_type')
+    .setTitle('Action Type')
+    .setType(CardService.SelectionInputType.DROPDOWN)
+    .addItem('Follow-up Call', 'call', true)
+    .addItem('Send Email', 'email', false)
+    .addItem('Schedule Meeting', 'meeting', false)
+    .addItem('Send Proposal', 'proposal', false)
+    .addItem('Schedule Demo', 'demo', false)
+    .addItem('Check In', 'check_in', false)
+    .addItem('Other', 'other', false);
+
+  // Custom description
+  const descInput = CardService.newTextInput()
+    .setFieldName('custom_desc')
+    .setTitle('Description (optional)')
+    .setHint('Override default action description');
+
+  // Due date selection
+  const dueDateSelect = CardService.newSelectionInput()
+    .setFieldName('due_days')
+    .setTitle('Due Date')
+    .setType(CardService.SelectionInputType.DROPDOWN)
+    .addItem('Today', '0', false)
+    .addItem('Tomorrow', '1', true)
+    .addItem('In 2 days', '2', false)
+    .addItem('In 3 days', '3', false)
+    .addItem('In 1 week', '7', false)
+    .addItem('In 2 weeks', '14', false)
+    .addItem('In 1 month', '30', false);
+
+  const createAction = CardService.newAction()
+    .setFunctionName('onSaveCustomFollowUp')
+    .setParameters({ dealId: dealId });
+
+  const createButton = CardService.newTextButton()
+    .setText('Create Task')
+    .setOnClickAction(createAction);
+
+  const section = CardService.newCardSection()
+    .addWidget(CardService.newTextParagraph()
+      .setText(`<b>Deal:</b> ${deal.title}`))
+    .addWidget(actionSelect)
+    .addWidget(descInput)
+    .addWidget(dueDateSelect)
+    .addWidget(createButton);
+
+  return CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle('Custom Follow-up'))
+    .addSection(section)
+    .build();
+}
+
+/**
+ * Callback for saving custom follow-up.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onSaveCustomFollowUp(e) {
+  const dealId = e.parameters.dealId;
+  const form = e.formInput;
+
+  const actionType = form.action_type || 'other';
+  const customDesc = form.custom_desc || '';
+  const dueDays = parseInt(form.due_days) || 1;
+
+  try {
+    const deal = getDealById(dealId);
+    if (!deal) {
+      throw new Error('Deal not found');
+    }
+
+    // Use custom description if provided
+    const actionMap = {
+      'call': 'Follow-up call',
+      'email': 'Send follow-up email',
+      'meeting': 'Schedule meeting',
+      'proposal': 'Send proposal',
+      'demo': 'Schedule demo',
+      'check_in': 'Check in',
+      'other': 'Follow up'
+    };
+
+    const action = customDesc || actionMap[actionType] || 'Follow up';
+
+    // Calculate due date
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + dueDays);
+    dueDate.setHours(9, 0, 0, 0);
+
+    createFollowUpTask(deal, action, dueDate);
+
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification()
+        .setText('Follow-up task created!'))
+      .setNavigation(CardService.newNavigation().popCard())
+      .build();
+  } catch (error) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification()
+        .setText('Error: ' + error.message))
+      .build();
+  }
+}
+
 // ============ ACCOUNT MAP CALLBACKS ============
 
 /**
