@@ -76,6 +76,13 @@ function initializeSheets(ss) {
     settingsSheet.appendRow(['pipeline_stages', 'Lead,Qualified,Proposal,Negotiation,Closed Won,Closed Lost']);
     settingsSheet.appendRow(['default_currency', 'USD']);
     settingsSheet.appendRow(['slack_webhook_url', '']);
+    // LLM settings for Company Enrichment
+    settingsSheet.appendRow(['llm_provider', 'gemini']);
+    settingsSheet.appendRow(['gemini_api_key', '']); // User should add their own key
+    settingsSheet.appendRow(['openai_api_key', '']);
+    settingsSheet.appendRow(['ollama_endpoint', 'http://localhost:11434/api/generate']);
+    settingsSheet.appendRow(['ollama_model', 'llama3.2:3b']);
+    settingsSheet.appendRow(['abstract_api_key', '']); // Optional: for richer company data
   }
 }
 

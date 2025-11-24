@@ -74,6 +74,14 @@ function buildContactCard(contact, deals) {
     .setHeader(CardService.newCardHeader().setTitle('Pipely CRM'))
     .addSection(section);
 
+  // Add Company Insights section if domain is not freemail
+  if (domain && !isFreemailDomain(domain)) {
+    const companySection = buildCompanyInsightsSection(domain);
+    if (companySection) {
+      card.addSection(companySection);
+    }
+  }
+
   if (deals && deals.length > 0) {
     const dealsSection = CardService.newCardSection().setHeader('Active Deals');
     deals.forEach(deal => {
@@ -103,6 +111,86 @@ function buildContactCard(contact, deals) {
   }
 
   return card.build();
+}
+
+/**
+ * Builds the company insights section with AI summary.
+ * @param {string} domain The company domain.
+ * @returns {GoogleAppsScript.Card_Service.CardSection|null} The company section or null.
+ */
+function buildCompanyInsightsSection(domain) {
+  try {
+    // Try to get or enrich company data
+    let companyData = getAccountByDomain(domain);
+
+    // If no cached data, try to enrich (but don't block UI)
+    if (!companyData) {
+      companyData = enrichCompany(domain);
+    }
+
+    if (!companyData || !companyData.company_name) {
+      return null;
+    }
+
+    const section = CardService.newCardSection()
+      .setHeader('Company Insights')
+      .setCollapsible(true)
+      .setNumUncollapsibleWidgets(2);
+
+    // Company info
+    if (companyData.industry) {
+      section.addWidget(CardService.newKeyValue()
+        .setTopLabel('Industry')
+        .setContent(companyData.industry));
+    }
+
+    if (companyData.employee_count) {
+      section.addWidget(CardService.newKeyValue()
+        .setTopLabel('Employees')
+        .setContent(String(companyData.employee_count)));
+    }
+
+    if (companyData.location) {
+      section.addWidget(CardService.newKeyValue()
+        .setTopLabel('Location')
+        .setContent(companyData.location));
+    }
+
+    if (companyData.founded_year) {
+      section.addWidget(CardService.newKeyValue()
+        .setTopLabel('Founded')
+        .setContent(String(companyData.founded_year)));
+    }
+
+    // AI Summary (the key feature!)
+    if (companyData.ai_summary) {
+      section.addWidget(CardService.newTextParagraph()
+        .setText('<b>AI Insights:</b>\n' + companyData.ai_summary));
+    }
+
+    // View website button
+    if (companyData.website) {
+      section.addWidget(CardService.newTextButton()
+        .setText('Visit Website')
+        .setOpenLink(CardService.newOpenLink()
+          .setUrl(companyData.website)
+          .setOpenAs(CardService.OpenAs.OVERLAY)));
+    }
+
+    // LinkedIn company page
+    if (companyData.linkedin_url) {
+      section.addWidget(CardService.newTextButton()
+        .setText('LinkedIn Company Page')
+        .setOpenLink(CardService.newOpenLink()
+          .setUrl(companyData.linkedin_url)
+          .setOpenAs(CardService.OpenAs.OVERLAY)));
+    }
+
+    return section;
+  } catch (e) {
+    console.warn('Failed to build company insights:', e.message);
+    return null;
+  }
 }
 
 /**
