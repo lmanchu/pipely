@@ -40,7 +40,7 @@ function initializeSheets(ss) {
     },
     {
       name: 'Contacts',
-      headers: ['email', 'name', 'company', 'phone', 'linkedin', 'notes', 'created_at']
+      headers: ['email', 'name', 'company', 'phone', 'linkedin', 'notes', 'created_at', 'avatar_url', 'company_logo_url', 'linkedin_guess_url', 'enriched_at']
     },
     {
       name: 'Activities',
@@ -225,34 +225,95 @@ function getContactByEmail(email) {
 function createOrUpdateContact(data) {
   const existing = getContactByEmail(data.email);
   if (existing) {
-    // In this simple version, we don't update existing contacts automatically
-    // to avoid overwriting user notes. Could be enhanced.
+    // If contact exists but hasn't been enriched, enrich it now
+    if (!existing.enriched_at && data.email) {
+      updateContactEnrichment(data.email);
+    }
     return existing;
   }
-  
+
   const ss = getOrCreateSpreadsheet();
   const sheet = ss.getSheetByName('Contacts');
   const now = new Date();
-  
+
+  // Enrich contact data
+  const enriched = enrichContact(data);
+
+  // Use enriched company if original is empty
+  const company = data.company || enriched.company_guess || '';
+
   const row = [
     data.email,
     data.name || '',
-    data.company || '',
+    company,
     data.phone || '',
-    data.linkedin || '',
+    data.linkedin || enriched.linkedin_guess_url || '',
     data.notes || '',
-    now
+    now,
+    enriched.avatar_url || '',
+    enriched.company_logo_url || '',
+    enriched.linkedin_guess_url || '',
+    now  // enriched_at
   ];
-  
+
   sheet.appendRow(row);
-  
+
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const contact = {};
   headers.forEach((header, index) => {
     contact[header] = row[index];
   });
-  
+
   return contact;
+}
+
+/**
+ * Updates enrichment data for an existing contact.
+ * @param {string} email The contact email.
+ * @returns {boolean} True if updated successfully.
+ */
+function updateContactEnrichment(email) {
+  const ss = getOrCreateSpreadsheet();
+  const sheet = ss.getSheetByName('Contacts');
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const emailIndex = headers.indexOf('email');
+
+  // Find the row
+  let rowIndex = -1;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][emailIndex] === email) {
+      rowIndex = i + 1;  // 1-based for sheet operations
+      break;
+    }
+  }
+
+  if (rowIndex === -1) return false;
+
+  // Get current contact data
+  const nameIndex = headers.indexOf('name');
+  const name = data[rowIndex - 1][nameIndex];
+
+  // Enrich
+  const enriched = enrichContact({ email: email, name: name });
+  const now = new Date();
+
+  // Update enrichment columns
+  const fieldsToUpdate = {
+    'avatar_url': enriched.avatar_url,
+    'company_logo_url': enriched.company_logo_url,
+    'linkedin_guess_url': enriched.linkedin_guess_url,
+    'enriched_at': now
+  };
+
+  Object.keys(fieldsToUpdate).forEach(field => {
+    const colIndex = headers.indexOf(field);
+    if (colIndex !== -1) {
+      sheet.getRange(rowIndex, colIndex + 1).setValue(fieldsToUpdate[field]);
+    }
+  });
+
+  return true;
 }
 
 /**

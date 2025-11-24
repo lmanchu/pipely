@@ -10,20 +10,65 @@
  * @returns {GoogleAppsScript.Card_Service.Card} The contact card.
  */
 function buildContactCard(contact, deals) {
-  const section = CardService.newCardSection()
-    .setHeader('Contact Details')
+  // Enrich contact with avatar, logo, and LinkedIn
+  const enriched = enrichContact(contact);
+  const domain = enriched.domain;
+
+  // Build header section with avatar
+  const headerSection = CardService.newCardSection();
+
+  // Add avatar image (Gravatar)
+  if (enriched.avatar_url) {
+    headerSection.addWidget(
+      CardService.newImage()
+        .setImageUrl(enriched.avatar_url)
+        .setAltText(contact.name || 'Avatar')
+    );
+  }
+
+  // Contact name with company logo inline (if available)
+  const displayName = contact.name || 'Unknown';
+  const displayCompany = contact.company || enriched.company_guess || 'Unknown';
+
+  headerSection
     .addWidget(CardService.newKeyValue()
       .setTopLabel('Name')
-      .setContent(contact.name || 'Unknown')
+      .setContent(displayName)
       .setIcon(CardService.Icon.PERSON))
     .addWidget(CardService.newKeyValue()
       .setTopLabel('Email')
       .setContent(contact.email)
-      .setIcon(CardService.Icon.EMAIL))
-    .addWidget(CardService.newKeyValue()
+      .setIcon(CardService.Icon.EMAIL));
+
+  // Company section with logo
+  if (enriched.company_logo_url && domain) {
+    headerSection.addWidget(
+      CardService.newDecoratedText()
+        .setTopLabel('Company')
+        .setText(displayCompany)
+        .setStartIcon(CardService.newIconImage()
+          .setIconUrl(enriched.company_logo_url)
+          .setAltText(displayCompany))
+    );
+  } else {
+    headerSection.addWidget(CardService.newKeyValue()
       .setTopLabel('Company')
-      .setContent(contact.company || 'Unknown')
+      .setContent(displayCompany)
       .setIcon(CardService.Icon.MEMBERSHIP));
+  }
+
+  // Add LinkedIn button if we have a guess
+  if (enriched.linkedin_guess_url) {
+    headerSection.addWidget(
+      CardService.newTextButton()
+        .setText('View LinkedIn (guess)')
+        .setOpenLink(CardService.newOpenLink()
+          .setUrl(enriched.linkedin_guess_url)
+          .setOpenAs(CardService.OpenAs.OVERLAY))
+    );
+  }
+
+  const section = headerSection;
 
   const card = CardService.newCardBuilder()
     .setHeader(CardService.newCardHeader().setTitle('Pipely CRM'))
