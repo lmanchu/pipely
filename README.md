@@ -1,13 +1,33 @@
-# Pipely - Gmail Add-on CRM
+<p align="center">
+  <img src="assets/logo.png" alt="Pipely Logo" width="400">
+</p>
 
-Pipely is a lightweight CRM that runs directly inside Gmail. It allows you to manage deals, contacts, and pipelines without leaving your inbox.
+<h1 align="center">Pipely</h1>
+
+<p align="center">
+  <strong>Pipeline in your inbox</strong><br>
+  A lightweight CRM that runs directly inside Gmail
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#setup">Setup</a> •
+  <a href="#usage">Usage</a> •
+  <a href="docs/PRD.md">Roadmap</a>
+</p>
+
+---
+
+Pipely lets you manage deals, contacts, and pipelines without leaving your inbox. Built on Google Sheets for transparency and zero backend costs.
 
 ## Features
 
-- **Contextual Sidebar**: Automatically shows contact details and deal status when you open an email.
-- **Pipeline Management**: View and update deal stages directly from the add-on.
-- **Slack Integration**: Get notified in Slack when new deals are created or stages are updated.
-- **Google Sheets Backend**: All data is stored in a Google Sheet for easy access and reporting.
+- **Contextual Sidebar**: Automatically shows contact details and deal status when you open an email
+- **Contact Enrichment**: Auto-fetch Gravatar avatars, company logos (Clearbit), and LinkedIn profile guesses
+- **Pipeline Management**: View and update deal stages directly from the add-on
+- **Slack Integration**: Get notified in Slack when new deals are created or stages are updated
+- **Google Sheets Backend**: All data is stored in a Google Sheet for easy access and reporting
+- **Zero Cost**: No backend servers, everything runs on Google's free tier
 
 ## Prerequisites
 
@@ -65,9 +85,29 @@ To enable Slack notifications:
 
 ## Project Structure
 
-- `src/Code.gs`: Main entry point and trigger handlers.
-- `src/Cards.gs`: UI builders for the add-on.
-- `src/Sheets.gs`: Database operations using Google Sheets.
-- `src/Gmail.gs`: Email parsing utilities.
-- `src/Slack.gs`: Slack notification integration.
-- `appsscript.json`: Manifest file.
+```
+pipely/
+├── assets/
+│   └── logo.png          # Brand assets
+├── docs/
+│   ├── PRD.md            # Product Requirements & Roadmap
+│   └── ROADMAP.md        # Development progress
+├── src/
+│   ├── Code.gs           # Main entry point and trigger handlers
+│   ├── Cards.gs          # UI builders for the add-on
+│   ├── Sheets.gs         # Database operations using Google Sheets
+│   ├── Gmail.gs          # Email parsing utilities
+│   ├── Slack.gs          # Slack notification integration
+│   ├── Enrichment.gs     # Contact enrichment (Gravatar, Clearbit, LinkedIn)
+│   └── appsscript.json   # Manifest file
+└── README.md
+```
+
+## Roadmap
+
+See [docs/PRD.md](docs/PRD.md) for the full product roadmap.
+
+**Coming Soon:**
+- Phase 3.3: Social Profile Discovery (Sherlock OSINT)
+- Phase 3.4: Company Enrichment with AI summaries
+- Phase 3.5: Account Map / Org Chart visualization
