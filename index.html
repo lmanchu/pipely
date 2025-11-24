@@ -258,93 +258,6 @@
       color: var(--gray);
     }
 
-    /* Pricing */
-    .pricing {
-      padding: 100px 0;
-    }
-
-    .pricing h2 {
-      text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 16px;
-    }
-
-    .pricing > p {
-      text-align: center;
-      color: var(--gray);
-      margin-bottom: 60px;
-    }
-
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 32px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .pricing-card {
-      padding: 40px 32px;
-      border-radius: 16px;
-      background: var(--white);
-      border: 2px solid rgba(0,0,0,0.08);
-      text-align: center;
-    }
-
-    .pricing-card.featured {
-      border-color: var(--primary);
-      position: relative;
-    }
-
-    .pricing-card.featured::before {
-      content: 'Popular';
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--gradient);
-      color: white;
-      padding: 4px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .pricing-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 8px;
-    }
-
-    .pricing-card .price {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .pricing-card .price span {
-      font-size: 1rem;
-      font-weight: 400;
-      color: var(--gray);
-    }
-
-    .pricing-card ul {
-      list-style: none;
-      margin: 24px 0;
-      text-align: left;
-    }
-
-    .pricing-card li {
-      padding: 8px 0;
-      color: var(--gray);
-    }
-
-    .pricing-card li::before {
-      content: '✓';
-      color: #34A853;
-      margin-right: 8px;
-      font-weight: 700;
-    }
-
     /* CTA */
     .cta {
       padding: 100px 0;
@@ -362,43 +275,6 @@
       color: rgba(255,255,255,0.7);
       margin-bottom: 40px;
       font-size: 1.1rem;
-    }
-
-    /* Waitlist Form */
-    .waitlist-form {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    .waitlist-form input[type="email"] {
-      flex: 1;
-      min-width: 250px;
-      padding: 16px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-    }
-
-    .waitlist-form button {
-      background: var(--gradient);
-      color: white;
-      padding: 16px 32px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .waitlist-form button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(234, 67, 53, 0.3);
     }
 
     /* Footer */
@@ -464,7 +340,7 @@
       <a href="#" class="logo">
         <img src="assets/logo.png" alt="Pipely">
       </a>
-      <a href="#waitlist" class="btn">Join Waitlist</a>
+      <a href="https://buymeacoffee.com/lmanchu3" class="btn" target="_blank">☕ Support</a>
     </div>
   </nav>
 
@@ -475,8 +351,8 @@
       <h1>Pipeline in your inbox</h1>
       <p>A lightweight CRM that runs directly inside Gmail. Manage deals, contacts, and pipelines without leaving your inbox.</p>
       <div class="hero-cta">
-        <a href="#waitlist" class="btn-primary">Join the Waitlist</a>
-        <a href="https://github.com/lmanchu/pipely" class="btn-secondary" target="_blank">View on GitHub</a>
+        <a href="https://github.com/lmanchu/pipely" class="btn-primary" target="_blank">View on GitHub</a>
+        <a href="https://buymeacoffee.com/lmanchu3" class="btn-secondary" target="_blank">☕ Buy Me a Coffee</a>
       </div>
     </div>
   </section>
@@ -544,61 +420,15 @@
     </div>
   </section>
 
-  <!-- Pricing -->
-  <section class="pricing">
-    <div class="container">
-      <h2>Simple, transparent pricing</h2>
-      <p>Start free, upgrade when you need more</p>
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <h3>Free</h3>
-          <div class="price">$0<span>/month</span></div>
-          <ul>
-            <li>50 contacts</li>
-            <li>1 pipeline</li>
-            <li>Gmail sidebar</li>
-            <li>Basic enrichment</li>
-          </ul>
-          <a href="#waitlist" class="btn-primary" style="width: 100%;">Get Started</a>
-        </div>
-        <div class="pricing-card featured">
-          <h3>Pro</h3>
-          <div class="price">$9<span>/month</span></div>
-          <ul>
-            <li>Unlimited contacts</li>
-            <li>5 pipelines</li>
-            <li>Slack integration</li>
-            <li>Advanced enrichment</li>
-            <li>Email support</li>
-          </ul>
-          <a href="#waitlist" class="btn-primary" style="width: 100%;">Join Waitlist</a>
-        </div>
-        <div class="pricing-card">
-          <h3>Team</h3>
-          <div class="price">$19<span>/user/mo</span></div>
-          <ul>
-            <li>Everything in Pro</li>
-            <li>Unlimited pipelines</li>
-            <li>Team collaboration</li>
-            <li>Analytics dashboard</li>
-            <li>Priority support</li>
-          </ul>
-          <a href="#waitlist" class="btn-primary" style="width: 100%;">Contact Us</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- CTA -->
-  <section class="cta" id="waitlist">
+  <section class="cta" id="support">
     <div class="container">
-      <h2>Ready to simplify your sales?</h2>
-      <p>Join the waitlist for early access and launch pricing.</p>
-      <form class="waitlist-form" action="https://formspree.io/f/mblbnbgr" method="POST">
-        <input type="email" name="email" placeholder="Enter your email" required>
-        <button type="submit">Join Waitlist</button>
-      </form>
-      <p style="margin-top: 16px; font-size: 0.9rem; color: rgba(255,255,255,0.5);">No spam, ever. We'll only email you about Pipely.</p>
+      <h2>Free & Open Source</h2>
+      <p>Pipely is completely free to use. If you find it helpful, consider buying me a coffee!</p>
+      <a href="https://buymeacoffee.com/lmanchu3" class="btn-primary" target="_blank" style="display: inline-flex; align-items: center; gap: 8px;">
+        <span>☕</span> Buy Me a Coffee
+      </a>
+      <p style="margin-top: 24px; font-size: 0.9rem; color: rgba(255,255,255,0.5);">Your support helps keep this project alive and growing.</p>
     </div>
   </section>
 
