@@ -13,7 +13,7 @@
   "runtimeVersion": "V8",
   "gmail": {
     "name": "Pipely",
-    "logoUrl": "https://raw.githubusercontent.com/lmanchu/pipely/main/assets/logo.png",
+    "logoUrl": "https://raw.githubusercontent.com/lmanchu/pipely/main/assets/icon.png",
     "contextualTriggers": [{
       "unconditional": {
       },
