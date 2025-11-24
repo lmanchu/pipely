@@ -208,7 +208,10 @@ Write ONLY the summary, no introduction or labels. Keep it under 100 words.`;
  * @returns {string} Generated text.
  */
 function callGeminiAPI(prompt) {
-  const apiKey = getSettingOrProperty('gemini_api_key');
+  // Check LocalConfig first (for local dev), then Settings/Properties
+  const apiKey = (typeof getLocalConfig === 'function' ? getLocalConfig('gemini_api_key') : '')
+    || getSettingOrProperty('gemini_api_key')
+    || LLM_CONFIG.gemini.apiKey;
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Set gemini_api_key in Settings.');
   }

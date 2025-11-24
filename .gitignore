@@ -12,3 +12,6 @@ package-lock.json
 
 # Local config with secrets
 # .clasp.json contains scriptId which is ok to commit
+
+# Local API keys - DO NOT COMMIT
+src/LocalConfig.gs
