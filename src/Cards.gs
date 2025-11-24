@@ -254,34 +254,112 @@ function buildAddDealForm(email, name, company) {
  */
 function buildDealCard(deal) {
   const stages = getSetting('pipeline_stages').split(',');
-  
+
+  // Stage update section
   const stageSelect = CardService.newSelectionInput()
     .setFieldName('new_stage')
     .setTitle('Update Stage')
     .setType(CardService.SelectionInputType.DROPDOWN);
-    
+
   stages.forEach(stage => {
     stageSelect.addItem(stage, stage, stage === deal.stage);
   });
-  
+
   const updateAction = CardService.newAction()
     .setFunctionName('onUpdateStage')
     .setParameters({ dealId: deal.deal_id, oldStage: deal.stage });
-    
+
   const updateButton = CardService.newTextButton()
     .setText('Update Stage')
     .setOnClickAction(updateAction);
 
-  const section = CardService.newCardSection()
+  // Main info section
+  const infoSection = CardService.newCardSection()
     .addWidget(CardService.newKeyValue().setTopLabel('Title').setContent(deal.title))
     .addWidget(CardService.newKeyValue().setTopLabel('Value').setContent(`${deal.currency} ${deal.value}`))
+    .addWidget(CardService.newKeyValue().setTopLabel('Contact').setContent(deal.contact_email || '-'))
     .addWidget(stageSelect)
-    .addWidget(updateButton)
-    .addWidget(CardService.newKeyValue().setTopLabel('Notes').setContent(deal.notes || '-').setMultiline(true));
+    .addWidget(updateButton);
+
+  // Tags section
+  const tagsSection = CardService.newCardSection()
+    .setHeader('Tags');
+
+  const currentTags = deal.tags ? deal.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+  if (currentTags.length > 0) {
+    tagsSection.addWidget(CardService.newTextParagraph()
+      .setText(currentTags.map(t => `[${t}]`).join(' ')));
+  }
+
+  const tagsInput = CardService.newTextInput()
+    .setFieldName('new_tags')
+    .setTitle('Edit Tags (comma separated)')
+    .setValue(deal.tags || '');
+
+  const updateTagsAction = CardService.newAction()
+    .setFunctionName('onUpdateTags')
+    .setParameters({ dealId: deal.deal_id });
+
+  const updateTagsButton = CardService.newTextButton()
+    .setText('Update Tags')
+    .setOnClickAction(updateTagsAction);
+
+  tagsSection
+    .addWidget(tagsInput)
+    .addWidget(updateTagsButton);
+
+  // Notes section
+  const notesSection = CardService.newCardSection()
+    .setHeader('Notes');
+
+  if (deal.notes) {
+    notesSection.addWidget(CardService.newTextParagraph()
+      .setText(deal.notes));
+  }
+
+  const notesInput = CardService.newTextInput()
+    .setFieldName('additional_notes')
+    .setTitle('Add Notes')
+    .setMultiline(true);
+
+  const updateNotesAction = CardService.newAction()
+    .setFunctionName('onUpdateNotes')
+    .setParameters({ dealId: deal.deal_id, existingNotes: deal.notes || '' });
+
+  const updateNotesButton = CardService.newTextButton()
+    .setText('Add Notes')
+    .setOnClickAction(updateNotesAction);
+
+  notesSection
+    .addWidget(notesInput)
+    .addWidget(updateNotesButton);
+
+  // Delete section (danger zone)
+  const deleteSection = CardService.newCardSection()
+    .setHeader('Danger Zone')
+    .setCollapsible(true)
+    .setNumUncollapsibleWidgets(0);
+
+  const deleteAction = CardService.newAction()
+    .setFunctionName('onDeleteDeal')
+    .setParameters({ dealId: deal.deal_id, dealTitle: deal.title });
+
+  const deleteButton = CardService.newTextButton()
+    .setText('Delete Deal')
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setBackgroundColor('#dc3545')
+    .setOnClickAction(deleteAction);
+
+  deleteSection.addWidget(CardService.newTextParagraph()
+    .setText('This action cannot be undone.'));
+  deleteSection.addWidget(deleteButton);
 
   return CardService.newCardBuilder()
     .setHeader(CardService.newCardHeader().setTitle('Deal Details'))
-    .addSection(section)
+    .addSection(infoSection)
+    .addSection(tagsSection)
+    .addSection(notesSection)
+    .addSection(deleteSection)
     .build();
 }
 

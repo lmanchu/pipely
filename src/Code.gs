@@ -128,7 +128,7 @@ function onUpdateStage(e) {
       const message = formatStageChangeMessage(deal, oldStage, newStage);
       sendSlackNotification(webhookUrl, message);
     }
-    
+
     return CardService.newActionResponseBuilder()
       .setNotification(CardService.newNotification().setText('Stage updated!'))
       .setNavigation(CardService.newNavigation().popCard().updateCard(buildDealCard(deal)))
@@ -136,6 +136,99 @@ function onUpdateStage(e) {
   } else {
     return CardService.newActionResponseBuilder()
       .setNotification(CardService.newNotification().setText('Error updating deal.'))
+      .build();
+  }
+}
+
+/**
+ * Callback for updating deal notes.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onUpdateNotes(e) {
+  const dealId = e.parameters.dealId;
+  const existingNotes = e.parameters.existingNotes || '';
+  const additionalNotes = e.formInput.additional_notes;
+
+  if (!additionalNotes || additionalNotes.trim() === '') {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Please enter some notes.'))
+      .build();
+  }
+
+  // Append new notes with timestamp
+  const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  const newNotes = existingNotes
+    ? `${existingNotes}\n\n[${timestamp}]\n${additionalNotes.trim()}`
+    : `[${timestamp}]\n${additionalNotes.trim()}`;
+
+  const deal = updateDeal(dealId, { notes: newNotes });
+
+  if (deal) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Notes added!'))
+      .setNavigation(CardService.newNavigation().updateCard(buildDealCard(deal)))
+      .build();
+  } else {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Error updating notes.'))
+      .build();
+  }
+}
+
+/**
+ * Callback for updating deal tags.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onUpdateTags(e) {
+  const dealId = e.parameters.dealId;
+  const newTags = e.formInput.new_tags || '';
+
+  const deal = updateDeal(dealId, { tags: newTags.trim() });
+
+  if (deal) {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Tags updated!'))
+      .setNavigation(CardService.newNavigation().updateCard(buildDealCard(deal)))
+      .build();
+  } else {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Error updating tags.'))
+      .build();
+  }
+}
+
+/**
+ * Callback for deleting a deal.
+ * @param {Object} e The event object.
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Action response.
+ */
+function onDeleteDeal(e) {
+  const dealId = e.parameters.dealId;
+  const dealTitle = e.parameters.dealTitle;
+
+  const success = deleteDeal(dealId);
+
+  if (success) {
+    // Send notification
+    const webhookUrl = getSetting('slack_webhook_url');
+    if (webhookUrl) {
+      const message = {
+        text: `:wastebasket: Deal deleted: *${dealTitle}*`
+      };
+      sendSlackNotification(webhookUrl, message);
+    }
+
+    // Navigate back to pipeline overview
+    const deals = getDeals();
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Deal deleted!'))
+      .setNavigation(CardService.newNavigation().popToRoot().updateCard(buildPipelineCard(deals)))
+      .build();
+  } else {
+    return CardService.newActionResponseBuilder()
+      .setNotification(CardService.newNotification().setText('Error deleting deal.'))
       .build();
   }
 }

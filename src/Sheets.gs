@@ -332,11 +332,59 @@ function getSetting(key) {
   const ss = getOrCreateSpreadsheet();
   const sheet = ss.getSheetByName('Settings');
   const data = sheet.getDataRange().getValues();
-  
+
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === key) {
       return data[i][1];
     }
   }
+  return null;
+}
+
+/**
+ * Deletes a deal by ID.
+ * @param {string} dealId The ID of the deal to delete.
+ * @returns {boolean} True if deleted successfully.
+ */
+function deleteDeal(dealId) {
+  const ss = getOrCreateSpreadsheet();
+  const sheet = ss.getSheetByName('Deals');
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const idIndex = headers.indexOf('deal_id');
+
+  // Find the row (1-based index)
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][idIndex] === dealId) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Gets a single deal by ID.
+ * @param {string} dealId The ID of the deal.
+ * @returns {Object|null} The deal object or null.
+ */
+function getDealById(dealId) {
+  const ss = getOrCreateSpreadsheet();
+  const sheet = ss.getSheetByName('Deals');
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+  const idIndex = headers.indexOf('deal_id');
+
+  for (let i = 0; i < data.length; i++) {
+    if (data[i][idIndex] === dealId) {
+      const deal = {};
+      headers.forEach((header, index) => {
+        deal[header] = data[i][index];
+      });
+      return deal;
+    }
+  }
+
   return null;
 }
