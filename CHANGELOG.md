@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-11-24
+
+### Added
+- **Analytics Dashboard**: New tab with interactive charts
+  - **Pipeline Funnel**: Horizontal bar chart showing deals per stage
+  - **Value by Stage**: Vertical bar chart showing $ value per stage
+  - **Win/Loss Rate**: Doughnut chart (Won/Lost/Open)
+  - **Deals Trend**: Line chart showing deals created in last 30 days
+- Chart.js integration via CDN
+- Color-coded stages for visual consistency
+
+### UI Changes
+- New "Analytics" tab between Pipeline and Accounts
+- Charts auto-render when switching to Analytics tab
+- Responsive grid layout (2 columns on desktop, 1 on mobile)
+
 ## [1.5.0] - 2025-11-24
 
 ### Added

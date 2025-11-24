@@ -416,6 +416,31 @@
       color: var(--gray-700);
     }
 
+    /* Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .chart-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--gray-700);
+    }
+
+    .chart-card canvas {
+      max-height: 250px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .header {
@@ -435,8 +460,14 @@
         flex: 1;
         min-width: 120px;
       }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <!-- Header -->
@@ -454,6 +485,7 @@
   <!-- Tabs -->
   <nav class="tabs">
     <div class="tab active" data-tab="pipeline" onclick="switchTab('pipeline')">Pipeline</div>
+    <div class="tab" data-tab="analytics" onclick="switchTab('analytics')">Analytics</div>
     <div class="tab" data-tab="accounts" onclick="switchTab('accounts')">Accounts</div>
   </nav>
 
@@ -486,6 +518,28 @@
         <div>Loading pipeline...</div>
       </div>
       <div class="pipeline-board" id="pipelineBoard"></div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analyticsTab" style="display: none;">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Pipeline Funnel</h3>
+          <canvas id="funnelChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Value by Stage</h3>
+          <canvas id="valueChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Win/Loss Rate</h3>
+          <canvas id="winRateChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Deals Created (Last 30 Days)</h3>
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
     </div>
 
     <!-- Accounts Tab -->
@@ -644,10 +698,16 @@
       document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
 
       document.getElementById('pipelineTab').style.display = tab === 'pipeline' ? 'block' : 'none';
+      document.getElementById('analyticsTab').style.display = tab === 'analytics' ? 'block' : 'none';
       document.getElementById('accountsTab').style.display = tab === 'accounts' ? 'block' : 'none';
 
       if (tab === 'accounts' && document.getElementById('accountsGrid').innerHTML === '') {
         loadAccounts();
+      }
+
+      if (tab === 'analytics') {
+        // Render charts when switching to analytics tab
+        setTimeout(renderCharts, 100);
       }
     }
 
@@ -822,6 +882,208 @@
     // View account (placeholder)
     function viewAccount(domain) {
       alert('Account details for ' + domain + ' - Coming soon!');
+    }
+
+    // ============ ANALYTICS CHARTS ============
+
+    let charts = {};
+
+    // Stage colors
+    const stageColors = {
+      'Lead': '#6c757d',
+      'Qualified': '#17a2b8',
+      'Proposal': '#ffc107',
+      'Negotiation': '#fd7e14',
+      'Closed Won': '#28a745',
+      'Closed Lost': '#dc3545'
+    };
+
+    // Render all charts
+    function renderCharts() {
+      renderFunnelChart();
+      renderValueChart();
+      renderWinRateChart();
+      renderTrendChart();
+    }
+
+    // Pipeline Funnel Chart
+    function renderFunnelChart() {
+      const ctx = document.getElementById('funnelChart');
+      if (!ctx) return;
+
+      // Destroy existing chart
+      if (charts.funnel) charts.funnel.destroy();
+
+      const stageData = stages.map(stage => {
+        return allDeals.filter(d => d.stage === stage).length;
+      });
+
+      const colors = stages.map(s => stageColors[s] || '#6c757d');
+
+      charts.funnel = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: stages,
+          datasets: [{
+            label: 'Deals',
+            data: stageData,
+            backgroundColor: colors,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // Value by Stage Chart
+    function renderValueChart() {
+      const ctx = document.getElementById('valueChart');
+      if (!ctx) return;
+
+      if (charts.value) charts.value.destroy();
+
+      const stageValues = stages.map(stage => {
+        return allDeals
+          .filter(d => d.stage === stage)
+          .reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
+      });
+
+      const colors = stages.map(s => stageColors[s] || '#6c757d');
+
+      charts.value = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: stages,
+          datasets: [{
+            label: 'Value ($)',
+            data: stageValues,
+            backgroundColor: colors,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Win/Loss Rate Chart
+    function renderWinRateChart() {
+      const ctx = document.getElementById('winRateChart');
+      if (!ctx) return;
+
+      if (charts.winRate) charts.winRate.destroy();
+
+      const won = allDeals.filter(d => d.stage === 'Closed Won').length;
+      const lost = allDeals.filter(d => d.stage === 'Closed Lost').length;
+      const open = allDeals.filter(d => !['Closed Won', 'Closed Lost'].includes(d.stage)).length;
+
+      charts.winRate = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Won', 'Lost', 'Open'],
+          datasets: [{
+            data: [won, lost, open],
+            backgroundColor: ['#28a745', '#dc3545', '#6c757d'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // Deals Trend Chart (Last 30 days)
+    function renderTrendChart() {
+      const ctx = document.getElementById('trendChart');
+      if (!ctx) return;
+
+      if (charts.trend) charts.trend.destroy();
+
+      // Generate last 30 days
+      const days = [];
+      const counts = [];
+      const today = new Date();
+
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+        // Count deals created on this date
+        const count = allDeals.filter(d => {
+          if (!d.created_at) return false;
+          const created = new Date(d.created_at).toISOString().split('T')[0];
+          return created === dateStr;
+        }).length;
+        counts.push(count);
+      }
+
+      charts.trend = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [{
+            label: 'New Deals',
+            data: counts,
+            borderColor: '#4285F4',
+            backgroundColor: 'rgba(66, 133, 244, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            },
+            x: {
+              ticks: {
+                maxTicksLimit: 7
+              }
+            }
+          }
+        }
+      });
     }
   </script>
 </body>
