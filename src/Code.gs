@@ -184,6 +184,15 @@ function onSaveDeal(e) {
     company: company
   });
   
+  // Calculate due date if specified
+  const dueDateDays = parseInt(form.due_date_days) || 0;
+  let dueDate = '';
+  if (dueDateDays > 0) {
+    const date = new Date();
+    date.setDate(date.getDate() + dueDateDays);
+    dueDate = Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+
   // Create deal
   const dealData = {
     title: form.title,
@@ -191,9 +200,10 @@ function onSaveDeal(e) {
     stage: form.stage,
     notes: form.notes,
     contact_email: email,
-    currency: getSetting('default_currency')
+    currency: getSetting('default_currency'),
+    due_date: dueDate
   };
-  
+
   const deal = createDeal(dealData);
   
   // Send notification

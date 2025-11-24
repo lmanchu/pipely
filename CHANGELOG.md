@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2025-11-24
+
+### Added
+- **Mobile PWA Support**: Dashboard can be installed as a mobile app
+  - Add to Home Screen on iOS and Android
+  - Full-screen standalone mode
+  - iOS safe area support (notch, home indicator)
+  - Touch-optimized UI (no tap highlight, no text selection)
+  - App icons: 180x180 (iOS), 192x192, 512x512
+
+### UI Changes
+- Dashboard header respects iOS safe area in standalone mode
+- Improved mobile viewport settings (no zoom, viewport-fit cover)
+- Theme color set to Pipely red (#EA4335)
+
+### How to Install
+1. Open Dashboard URL in Safari (iOS) or Chrome (Android)
+2. iOS: Tap Share > Add to Home Screen
+3. Android: Tap menu > Install app
+
+## [1.7.0] - 2025-11-24
+
+### Added
+- **Due Date Reminders**: Track deal deadlines and get notified
+  - Due Date dropdown when creating deals (3 days, 1 week, 2 weeks, 1 month, 3 months)
+  - Deal detail card shows due date with urgency labels (Today, Tomorrow, OVERDUE)
+  - Daily Slack notifications for overdue, due today, and due tomorrow deals
+  - Stale deal detection (no updates in 3+ days)
+- New `Reminders.gs` with time-based trigger functions
+  - `setupDailyReminderTrigger()`: Run once to enable daily 9 AM checks
+  - `checkDueDeals()`: Main reminder logic
+  - `testCheckDueDeals()`: Manual test function
+
+### UI Changes
+- "Add Deal" form now includes Due Date selection
+- Deal detail card displays Due Date with countdown
+
+### Setup
+Run `setupDailyReminderTrigger()` once in Apps Script editor to enable daily reminders.
+
 ## [1.6.0] - 2025-11-24
 
 ### Added

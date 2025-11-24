@@ -227,6 +227,18 @@ function buildAddDealForm(email, name, company) {
     inputStage.addItem(stage, stage, stage === stages[0]);
   });
 
+  // Due Date selection
+  const dueDateSelect = CardService.newSelectionInput()
+    .setFieldName('due_date_days')
+    .setTitle('Due Date')
+    .setType(CardService.SelectionInputType.DROPDOWN)
+    .addItem('No due date', '0', true)
+    .addItem('In 3 days', '3', false)
+    .addItem('In 1 week', '7', false)
+    .addItem('In 2 weeks', '14', false)
+    .addItem('In 1 month', '30', false)
+    .addItem('In 3 months', '90', false);
+
   const inputNotes = CardService.newTextInput()
     .setFieldName('notes')
     .setTitle('Notes')
@@ -244,6 +256,7 @@ function buildAddDealForm(email, name, company) {
     .addWidget(inputTitle)
     .addWidget(inputValue)
     .addWidget(inputStage)
+    .addWidget(dueDateSelect)
     .addWidget(inputNotes)
     .addWidget(saveButton);
 
@@ -279,11 +292,33 @@ function buildDealCard(deal) {
     .setText('Update Stage')
     .setOnClickAction(updateAction);
 
+  // Format due date display
+  let dueDateDisplay = '-';
+  if (deal.due_date) {
+    const dueDate = new Date(deal.due_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      dueDateDisplay = `${deal.due_date} (OVERDUE)`;
+    } else if (diffDays === 0) {
+      dueDateDisplay = `${deal.due_date} (Today)`;
+    } else if (diffDays === 1) {
+      dueDateDisplay = `${deal.due_date} (Tomorrow)`;
+    } else if (diffDays <= 7) {
+      dueDateDisplay = `${deal.due_date} (${diffDays} days)`;
+    } else {
+      dueDateDisplay = deal.due_date;
+    }
+  }
+
   // Main info section
   const infoSection = CardService.newCardSection()
     .addWidget(CardService.newKeyValue().setTopLabel('Title').setContent(deal.title))
     .addWidget(CardService.newKeyValue().setTopLabel('Value').setContent(`${deal.currency} ${deal.value}`))
     .addWidget(CardService.newKeyValue().setTopLabel('Contact').setContent(deal.contact_email || '-'))
+    .addWidget(CardService.newKeyValue().setTopLabel('Due Date').setContent(dueDateDisplay))
     .addWidget(stageSelect)
     .addWidget(updateButton);
 

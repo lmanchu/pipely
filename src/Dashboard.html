@@ -1,9 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pipely">
+  <meta name="application-name" content="Pipely">
+  <meta name="theme-color" content="#EA4335">
+  <meta name="description" content="Pipely CRM - Manage your sales pipeline">
+
+  <!-- App Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/lmanchu/pipely/main/assets/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://raw.githubusercontent.com/lmanchu/pipely/main/assets/icon-192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/lmanchu/pipely/main/assets/icon.png">
+
+  <!-- Splash screens for iOS -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <title>Pipely Dashboard</title>
   <style>
     :root {
@@ -31,6 +47,23 @@
       background: var(--gray-100);
       color: var(--gray-900);
       line-height: 1.5;
+      /* PWA safe area support */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* PWA Standalone mode adjustments */
+    @media (display-mode: standalone) {
+      .header {
+        padding-top: calc(1rem + env(safe-area-inset-top));
+      }
     }
 
     /* Header */
