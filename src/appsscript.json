@@ -13,14 +13,14 @@
   "runtimeVersion": "V8",
   "gmail": {
     "name": "Pipely",
-    "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/receipt_black_24dp.png",
+    "logoUrl": "https://raw.githubusercontent.com/lmanchu/pipely/main/assets/logo.png",
     "contextualTriggers": [{
       "unconditional": {
       },
       "onTriggerFunction": "onGmailMessage"
     }],
-    "primaryColor": "#4285F4",
-    "secondaryColor": "#3367D6",
+    "primaryColor": "#EA4335",
+    "secondaryColor": "#4285F4",
     "homepageTrigger": {
       "runFunction": "onHomepage",
       "enabled": true
