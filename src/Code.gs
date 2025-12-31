@@ -3,6 +3,174 @@
  * Main entry point for Pipely.
  */
 
+// ============ TEAM COLLABORATION FUNCTIONS ============
+
+/**
+ * Gets the current user's email.
+ * @returns {string} The current user's email.
+ */
+function getCurrentUserEmail() {
+  return Session.getActiveUser().getEmail();
+}
+
+/**
+ * Gets deals owned by the current user only.
+ * @returns {Array<Object>} List of deals owned by current user.
+ */
+function getMyDeals() {
+  const myEmail = getCurrentUserEmail();
+  const allDeals = getDeals();
+  return allDeals.filter(d => d.owner_email === myEmail);
+}
+
+/**
+ * Assigns a deal to a new owner.
+ * @param {string} dealId The deal ID.
+ * @param {string} newOwnerEmail The new owner's email.
+ * @returns {Object|null} The updated deal or null.
+ */
+function assignDeal(dealId, newOwnerEmail) {
+  const deal = updateDeal(dealId, { owner_email: newOwnerEmail });
+
+  if (deal) {
+    // Send Slack notification about assignment
+    const webhookUrl = getSetting('slack_webhook_url');
+    if (webhookUrl) {
+      const assignerEmail = getCurrentUserEmail();
+      const message = {
+        text: `:busts_in_silhouette: Deal assigned: *${deal.title}*`,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `:busts_in_silhouette: *Deal Assigned*\n*${deal.title}*`
+            }
+          },
+          {
+            type: 'context',
+            elements: [
+              {
+                type: 'mrkdwn',
+                text: `From: ${assignerEmail} → To: ${newOwnerEmail}`
+              }
+            ]
+          }
+        ]
+      };
+      sendSlackNotification(webhookUrl, message);
+    }
+  }
+
+  return deal;
+}
+
+/**
+ * Gets list of team members who have access to the spreadsheet.
+ * @returns {Array<Object>} List of team members with email and role.
+ */
+function getTeamMembers() {
+  try {
+    const ss = getOrCreateSpreadsheet();
+    const editors = ss.getEditors();
+    const viewers = ss.getViewers();
+    const owner = ss.getOwner();
+
+    const members = [];
+
+    // Add owner
+    if (owner) {
+      members.push({
+        email: owner.getEmail(),
+        role: 'Owner',
+        name: owner.getName() || owner.getEmail().split('@')[0]
+      });
+    }
+
+    // Add editors
+    editors.forEach(editor => {
+      if (!members.find(m => m.email === editor.getEmail())) {
+        members.push({
+          email: editor.getEmail(),
+          role: 'Editor',
+          name: editor.getName() || editor.getEmail().split('@')[0]
+        });
+      }
+    });
+
+    // Add viewers
+    viewers.forEach(viewer => {
+      if (!members.find(m => m.email === viewer.getEmail())) {
+        members.push({
+          email: viewer.getEmail(),
+          role: 'Viewer',
+          name: viewer.getName() || viewer.getEmail().split('@')[0]
+        });
+      }
+    });
+
+    return members;
+  } catch (e) {
+    console.error('Error getting team members:', e);
+    return [{ email: getCurrentUserEmail(), role: 'Owner', name: 'Me' }];
+  }
+}
+
+/**
+ * Gets dashboard data with optional filter for current user's deals only.
+ * @param {boolean} myDealsOnly If true, only return current user's deals.
+ * @returns {Object} Dashboard data including deals, stages, accounts, and team info.
+ */
+function getDashboardDataFiltered(myDealsOnly) {
+  const allDeals = getDeals();
+  const myEmail = getCurrentUserEmail();
+  const deals = myDealsOnly
+    ? allDeals.filter(d => d.owner_email === myEmail)
+    : allDeals;
+
+  const stages = getSetting('pipeline_stages').split(',');
+  const teamMembers = getTeamMembers();
+
+  // Get unique domains from deals
+  const accountDomains = new Set();
+  deals.forEach(deal => {
+    if (deal.contact_email && deal.contact_email.includes('@')) {
+      const domain = deal.contact_email.split('@')[1].toLowerCase();
+      if (!isFreemailDomain(domain)) {
+        accountDomains.add(domain);
+      }
+    }
+  });
+
+  // Build account summary
+  const accounts = [];
+  accountDomains.forEach(domain => {
+    const accountData = getAccountByDomain(domain);
+    const contacts = getContactsByDomain(domain);
+    const dealCount = deals.filter(d =>
+      d.contact_email && d.contact_email.toLowerCase().endsWith('@' + domain)
+    ).length;
+
+    accounts.push({
+      domain: domain,
+      company_name: accountData?.company_name || guessCompanyFromDomain(domain),
+      logo_url: `https://logo.clearbit.com/${domain}`,
+      contact_count: contacts.length,
+      deal_count: dealCount
+    });
+  });
+
+  return {
+    deals: deals,
+    allDealsCount: allDeals.length,
+    myDealsCount: allDeals.filter(d => d.owner_email === myEmail).length,
+    stages: stages,
+    accounts: accounts,
+    teamMembers: teamMembers,
+    currentUserEmail: myEmail
+  };
+}
+
 // ============ WEB APP ENDPOINTS ============
 
 /**

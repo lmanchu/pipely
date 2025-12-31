@@ -474,6 +474,78 @@
       max-height: 250px;
     }
 
+    /* Toggle Button Group */
+    .toggle-group {
+      display: flex;
+      background: var(--gray-200);
+      border-radius: 6px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .toggle-btn {
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: transparent;
+      color: var(--gray-500);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .toggle-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .toggle-btn:hover:not(.active) {
+      color: var(--gray-700);
+    }
+
+    .toggle-count {
+      background: var(--gray-300);
+      padding: 0.1rem 0.4rem;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      margin-left: 0.3rem;
+    }
+
+    .toggle-btn.active .toggle-count {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Owner Badge */
+    .deal-owner {
+      font-size: 0.7rem;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.4rem;
+    }
+
+    .deal-owner-avatar {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 600;
+    }
+
+    .deal-owner.is-me .deal-owner-avatar {
+      background: var(--success);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .header {
@@ -526,6 +598,15 @@
   <main class="main">
     <!-- Stats Bar -->
     <div class="stats-bar" id="statsBar">
+      <!-- Toggle: My Deals / All Deals -->
+      <div class="toggle-group" id="dealsToggle">
+        <button class="toggle-btn active" onclick="toggleDealsFilter(false)">
+          All Deals<span class="toggle-count" id="allDealsCount">-</span>
+        </button>
+        <button class="toggle-btn" onclick="toggleDealsFilter(true)">
+          My Deals<span class="toggle-count" id="myDealsCount">-</span>
+        </button>
+      </div>
       <div class="stat-card">
         <div class="stat-label">Total Deals</div>
         <div class="stat-value" id="statTotalDeals">-</div>
@@ -614,6 +695,10 @@
           <input type="text" id="dealTags">
         </div>
         <div class="form-group">
+          <label>Assign to</label>
+          <select id="dealOwner"></select>
+        </div>
+        <div class="form-group">
           <label>Notes</label>
           <textarea id="dealNotes"></textarea>
         </div>
@@ -633,6 +718,13 @@
     let stages = [];
     let currentDealId = null;
 
+    // Team collaboration state
+    let teamMembers = [];
+    let myDealsOnly = false;
+    let currentUserEmail = '';
+    let allDealsCount = 0;
+    let myDealsCount = 0;
+
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
       loadPipelineData();
@@ -648,15 +740,44 @@
           allDeals = data.deals || [];
           stages = data.stages || [];
           allAccounts = data.accounts || [];
+
+          // Team collaboration data
+          teamMembers = data.teamMembers || [];
+          currentUserEmail = data.currentUserEmail || '';
+          allDealsCount = data.allDealsCount || allDeals.length;
+          myDealsCount = data.myDealsCount || 0;
+
           renderPipeline();
           renderStats();
+          updateToggleCounts();
           document.getElementById('pipelineLoading').style.display = 'none';
         })
         .withFailureHandler(function(error) {
           document.getElementById('pipelineLoading').innerHTML =
             '<div style="color: var(--danger)">Error loading data: ' + error.message + '</div>';
         })
-        .getDashboardData();
+        .getDashboardDataFiltered(myDealsOnly);
+    }
+
+    // Update toggle button counts
+    function updateToggleCounts() {
+      document.getElementById('allDealsCount').textContent = allDealsCount;
+      document.getElementById('myDealsCount').textContent = myDealsCount;
+    }
+
+    // Toggle between My Deals and All Deals
+    function toggleDealsFilter(showMyDeals) {
+      if (myDealsOnly === showMyDeals) return;
+
+      myDealsOnly = showMyDeals;
+
+      // Update toggle button UI
+      const buttons = document.querySelectorAll('.toggle-btn');
+      buttons[0].classList.toggle('active', !myDealsOnly);
+      buttons[1].classList.toggle('active', myDealsOnly);
+
+      // Reload data with new filter
+      loadPipelineData();
     }
 
     // Render pipeline board
@@ -690,6 +811,18 @@
       const tags = deal.tags ? deal.tags.split(',').filter(t => t.trim()) : [];
       const tagsHtml = tags.map(t => `<span class="tag">${t.trim()}</span>`).join('');
 
+      // Owner display
+      const ownerEmail = deal.owner_email || '';
+      const isMe = ownerEmail === currentUserEmail;
+      const ownerInitial = ownerEmail ? ownerEmail.charAt(0).toUpperCase() : '?';
+      const ownerName = getOwnerDisplayName(ownerEmail);
+      const ownerHtml = ownerEmail ? `
+        <div class="deal-owner ${isMe ? 'is-me' : ''}">
+          <span class="deal-owner-avatar">${ownerInitial}</span>
+          <span>${isMe ? 'Me' : ownerName}</span>
+        </div>
+      ` : '';
+
       return `
         <div class="deal-card" draggable="true"
              data-deal-id="${deal.deal_id}"
@@ -702,8 +835,18 @@
             <span class="deal-value">${deal.currency || 'USD'} ${formatNumber(deal.value)}</span>
             <div class="deal-tags">${tagsHtml}</div>
           </div>
+          ${ownerHtml}
         </div>
       `;
+    }
+
+    // Get display name for owner
+    function getOwnerDisplayName(email) {
+      if (!email) return 'Unassigned';
+      const member = teamMembers.find(m => m.email === email);
+      if (member && member.name) return member.name;
+      // Extract name from email (before @)
+      return email.split('@')[0];
     }
 
     // Render stats
@@ -843,6 +986,22 @@
         `<option value="${s}" ${s === deal.stage ? 'selected' : ''}>${s}</option>`
       ).join('');
 
+      // Populate owner dropdown
+      const ownerSelect = document.getElementById('dealOwner');
+      const currentOwner = deal.owner_email || '';
+      let ownerOptions = '<option value="">Unassigned</option>';
+      teamMembers.forEach(member => {
+        const isSelected = member.email === currentOwner ? 'selected' : '';
+        const displayName = member.name || member.email.split('@')[0];
+        const isMe = member.email === currentUserEmail ? ' (Me)' : '';
+        ownerOptions += `<option value="${member.email}" ${isSelected}>${displayName}${isMe}</option>`;
+      });
+      // If current owner is not in team members list, add them
+      if (currentOwner && !teamMembers.find(m => m.email === currentOwner)) {
+        ownerOptions += `<option value="${currentOwner}" selected>${currentOwner}</option>`;
+      }
+      ownerSelect.innerHTML = ownerOptions;
+
       document.getElementById('dealModal').classList.add('show');
     }
 
@@ -854,23 +1013,32 @@
     function saveDeal() {
       if (!currentDealId) return;
 
+      const deal = allDeals.find(d => d.deal_id === currentDealId);
+      const newOwnerEmail = document.getElementById('dealOwner').value;
+      const ownerChanged = deal && deal.owner_email !== newOwnerEmail;
+
       const updates = {
         title: document.getElementById('dealTitle').value,
         value: document.getElementById('dealValue').value,
         stage: document.getElementById('dealStage').value,
         tags: document.getElementById('dealTags').value,
-        notes: document.getElementById('dealNotes').value
+        notes: document.getElementById('dealNotes').value,
+        owner_email: newOwnerEmail
       };
 
       google.script.run
         .withSuccessHandler(function() {
           // Update local data
-          const deal = allDeals.find(d => d.deal_id === currentDealId);
           if (deal) {
             Object.assign(deal, updates);
           }
           renderPipeline();
           closeModal();
+
+          // If owner changed, also call assignDeal for Slack notification
+          if (ownerChanged && newOwnerEmail) {
+            google.script.run.assignDeal(currentDealId, newOwnerEmail);
+          }
         })
         .withFailureHandler(function(error) {
           alert('Error saving: ' + error.message);
