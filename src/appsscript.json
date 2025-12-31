@@ -1,5 +1,13 @@
 {
   "timeZone": "America/New_York",
+  "urlFetchWhitelist": [
+    "https://api.clearbit.com/",
+    "https://logo.clearbit.com/",
+    "https://hooks.slack.com/",
+    "https://www.gravatar.com/",
+    "https://api.hunter.io/",
+    "https://api.apollo.io/"
+  ],
   "dependencies": {
     "enabledAdvancedServices": [
       {
