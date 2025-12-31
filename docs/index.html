@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipely - Lightweight CRM for Gmail</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: white;
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1.5rem;
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .tagline {
+      font-size: 1.3rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+    }
+    .cta-button {
+      display: inline-block;
+      background: white;
+      color: #764ba2;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+    }
+    .features {
+      background: white;
+      border-radius: 20px;
+      padding: 3rem;
+      margin-top: -2rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    .features h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 2rem;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+    .feature {
+      text-align: center;
+      padding: 1.5rem;
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .feature h3 {
+      color: #4285F4;
+      margin-bottom: 0.5rem;
+    }
+    .feature p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+    .links {
+      text-align: center;
+      padding: 2rem;
+      color: white;
+    }
+    .links a {
+      color: white;
+      opacity: 0.8;
+      margin: 0 1rem;
+      text-decoration: none;
+    }
+    .links a:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <img src="https://raw.githubusercontent.com/lmanchu/pipely/main/assets/icon.png" alt="Pipely" class="logo">
+      <h1>Pipely</h1>
+      <p class="tagline">Turn Gmail into a lightweight CRM.<br>Track deals, contacts & pipeline from your inbox.</p>
+      <a href="https://workspace.google.com/marketplace/app/pipely/YOUR_APP_ID" class="cta-button">
+        Install from Marketplace
+      </a>
+    </div>
+
+    <div class="features">
+      <h2>Why Pipely?</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="feature-icon">📧</div>
+          <h3>Works in Gmail</h3>
+          <p>No new app to learn. Manage your sales pipeline right from your inbox sidebar.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <h3>Visual Pipeline</h3>
+          <p>Drag-and-drop Kanban board. See your deals flow from lead to close.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">👥</div>
+          <h3>Team Ready</h3>
+          <p>Share pipeline with your team. Track performance with leaderboards.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔒</div>
+          <h3>Your Data, Your Control</h3>
+          <p>All data stored in YOUR Google Sheets. Zero external servers.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>One-Click Contacts</h3>
+          <p>Create contacts from any email with a single click. Auto-enrich company data.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔔</div>
+          <h3>Slack Notifications</h3>
+          <p>Get deal updates in Slack. Never miss a stage change.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="https://github.com/lmanchu/pipely">GitHub</a>
+      <a href="mailto:support@irisgo.ai">Support</a>
+    </div>
+  </div>
+</body>
+</html>
