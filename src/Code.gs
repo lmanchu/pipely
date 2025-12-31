@@ -171,6 +171,147 @@ function getDashboardDataFiltered(myDealsOnly) {
   };
 }
 
+// ============ TEAM STATS & ACTIVITY FUNCTIONS ============
+
+/**
+ * Gets team performance statistics.
+ * @returns {Object} Team stats including per-member breakdown.
+ */
+function getTeamStats() {
+  const allDeals = getDeals();
+  const teamMembers = getTeamMembers();
+  const stages = getSetting('pipeline_stages').split(',');
+
+  // Calculate stats per member
+  const byMember = teamMembers.map(member => {
+    const memberDeals = allDeals.filter(d => d.owner_email === member.email);
+    const wonDeals = memberDeals.filter(d => d.stage === 'Won');
+
+    return {
+      email: member.email,
+      name: member.name,
+      role: member.role,
+      dealCount: memberDeals.length,
+      totalValue: memberDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0),
+      wonDeals: wonDeals.length,
+      wonValue: wonDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0),
+      avgDealSize: memberDeals.length > 0
+        ? memberDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0) / memberDeals.length
+        : 0
+    };
+  });
+
+  // Calculate stats per stage
+  const byStage = stages.map(stage => {
+    const stageDeals = allDeals.filter(d => d.stage === stage.trim());
+    return {
+      stage: stage.trim(),
+      count: stageDeals.length,
+      value: stageDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0)
+    };
+  });
+
+  // Overall stats
+  const totalValue = allDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
+  const wonDeals = allDeals.filter(d => d.stage === 'Won');
+  const wonValue = wonDeals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0);
+
+  return {
+    totalDeals: allDeals.length,
+    totalValue: totalValue,
+    wonDeals: wonDeals.length,
+    wonValue: wonValue,
+    winRate: allDeals.length > 0 ? (wonDeals.length / allDeals.length * 100).toFixed(1) : 0,
+    avgDealSize: allDeals.length > 0 ? totalValue / allDeals.length : 0,
+    byMember: byMember.sort((a, b) => b.totalValue - a.totalValue),
+    byStage: byStage
+  };
+}
+
+/**
+ * Logs a deal activity to the Activity sheet.
+ * @param {string} dealId The deal ID.
+ * @param {string} action The action type (created, updated, stage_changed, assigned, won, lost).
+ * @param {string} details Additional details about the action.
+ * @param {string} dealTitle The deal title for display.
+ */
+function logDealActivity(dealId, action, details, dealTitle) {
+  try {
+    const ss = getOrCreateSpreadsheet();
+    let activitySheet = ss.getSheetByName('Activity');
+
+    // Create Activity sheet if it doesn't exist
+    if (!activitySheet) {
+      activitySheet = ss.insertSheet('Activity');
+      activitySheet.getRange('A1:F1').setValues([['timestamp', 'deal_id', 'deal_title', 'action', 'actor', 'details']]);
+      activitySheet.getRange('A1:F1').setFontWeight('bold');
+      activitySheet.setFrozenRows(1);
+    }
+
+    const actor = getCurrentUserEmail();
+    const timestamp = new Date().toISOString();
+
+    activitySheet.appendRow([timestamp, dealId, dealTitle, action, actor, details]);
+
+    // Keep only last 500 activities to prevent sheet bloat
+    const lastRow = activitySheet.getLastRow();
+    if (lastRow > 501) {
+      activitySheet.deleteRows(2, lastRow - 501);
+    }
+  } catch (e) {
+    console.error('Error logging activity:', e);
+  }
+}
+
+/**
+ * Gets deal activity history.
+ * @param {number} limit Maximum number of activities to return.
+ * @returns {Array<Object>} List of recent activities.
+ */
+function getDealActivityHistory(limit) {
+  limit = limit || 50;
+
+  try {
+    const ss = getOrCreateSpreadsheet();
+    const activitySheet = ss.getSheetByName('Activity');
+
+    if (!activitySheet || activitySheet.getLastRow() <= 1) {
+      return [];
+    }
+
+    const lastRow = activitySheet.getLastRow();
+    const startRow = Math.max(2, lastRow - limit + 1);
+    const numRows = lastRow - startRow + 1;
+
+    const data = activitySheet.getRange(startRow, 1, numRows, 6).getValues();
+
+    return data.map(row => ({
+      timestamp: row[0],
+      dealId: row[1],
+      dealTitle: row[2],
+      action: row[3],
+      actor: row[4],
+      details: row[5]
+    })).reverse(); // Most recent first
+  } catch (e) {
+    console.error('Error getting activity history:', e);
+    return [];
+  }
+}
+
+/**
+ * Gets team dashboard data including stats and activity.
+ * @returns {Object} Complete team dashboard data.
+ */
+function getTeamDashboardData() {
+  return {
+    stats: getTeamStats(),
+    recentActivity: getDealActivityHistory(30),
+    teamMembers: getTeamMembers(),
+    currentUserEmail: getCurrentUserEmail()
+  };
+}
+
 // ============ WEB APP ENDPOINTS ============
 
 /**
